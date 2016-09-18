@@ -1,13 +1,25 @@
 defmodule AI.Cell.StandardGradedTest do
   use ExUnit.Case, async: true
 
+  alias AI.Cell.StandardGraded
+
   setup do
-    {:ok, cell} = AI.Controller.create(%AI.Cell.StandardGraded{})
+    {:ok, cell} = StandardGraded.start_link
     {:ok, cell: cell}
   end
 
-  test "adds to subscriber list", %{cell: cell} do
-    AI.Cell.connect(cell, cell)
-    assert Enum.any?(cell.subscribers, fn(c) -> c == cell end)
+  test "should be able to create an instance" do
+    {:ok, cell} = StandardGraded.start_link
+    assert cell != nil
+  end
+
+  test "should be able to add subscribers", %{cell: cell} do
+    {:ok, subscribers} = StandardGraded.subscribe(cell, cell)
+    assert Enum.any?(subscribers, fn(s) -> s == cell end)
+  end
+
+  test "should be able to stimulate the cell", %{cell: cell} do
+    {:ok, charge} = StandardGraded.stimulate(cell, 10)
+    assert charge == 10
   end
 end
