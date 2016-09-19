@@ -8,8 +8,13 @@ defmodule AI.Cell.StandardGraded do
   end
 
   def stimulate(cell, transmitter) do
-    charge = get(cell, :charge) + transmitter
+    original_charge = get(cell, :charge)
+
+    charge = original_charge + transmitter
     put(cell, :charge, charge)
+    if original_charge == 0 do
+      decay(cell)
+    end
     {:ok, charge}
   end
 
@@ -23,6 +28,26 @@ defmodule AI.Cell.StandardGraded do
   end
 
   defp put(cell, key, value) do
+    # IO.puts "PUT #{key} #{value}"
     Agent.update(cell, &Map.put(&1, key, value))
+  end
+
+  def decay(cell) do
+    charge = get(cell, :charge)
+    case charge do
+      0.0 -> %{}
+      0 -> %{}
+      _ ->
+        Agent.cast(cell, &publish(&1))
+        put(cell, :charge, Float.floor(charge / 2))
+        decay(cell)
+    end
+
+  end
+  def publish(cell) do
+    if Map.get(cell, :subscribers) do
+      Enum.each(Map.get(cell, :subscribers), &stimulate(&1, cell.charge))
+    end
+    cell
   end
 end
