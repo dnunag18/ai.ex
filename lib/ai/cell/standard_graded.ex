@@ -1,7 +1,7 @@
 defmodule AI.Cell.StandardGraded do
   @behaviour AI.Cell
 
-  defstruct [subscribers: [], charge: 0]
+  defstruct [subscribers: [], charge: 0.0]
 
   def start_link do
     Agent.start_link(fn -> %AI.Cell.StandardGraded{} end)
@@ -12,7 +12,7 @@ defmodule AI.Cell.StandardGraded do
 
     charge = original_charge + transmitter
     put(cell, :charge, charge)
-    if original_charge == 0 do
+    if original_charge == 0.0 do
       decay(cell)
     end
     {:ok, charge}
@@ -33,17 +33,22 @@ defmodule AI.Cell.StandardGraded do
   end
 
   def decay(cell) do
+    Task.Supervisor.start_child(AI.TaskSupervisor, fn ->
+      decay_task(cell)
+    end)
+  end
+
+  def decay_task(cell) do
     charge = get(cell, :charge)
     case charge do
       0.0 -> %{}
-      0 -> %{}
       _ ->
         Agent.cast(cell, &publish(&1))
         put(cell, :charge, Float.floor(charge / 2))
         decay(cell)
     end
-
   end
+
   def publish(cell) do
     if Map.get(cell, :subscribers) do
       Enum.each(Map.get(cell, :subscribers), &stimulate(&1, cell.charge))

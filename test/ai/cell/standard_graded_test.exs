@@ -1,7 +1,14 @@
 defmodule AI.Cell.StandardGradedTest do
   use ExUnit.Case, async: true
 
+  @moduletag :capture_log
+
   alias AI.Cell.StandardGraded
+
+  setup do
+    Application.stop(:ai)
+    :ok = Application.start(:ai)
+  end
 
   setup do
     {:ok, cell} = StandardGraded.start_link
@@ -24,7 +31,9 @@ defmodule AI.Cell.StandardGradedTest do
   end
 
   test "charge should decay over time", %{cell: cell} do
-    {:ok, charge} = StandardGraded.stimulate(cell, 10)
+    {:ok, _} = StandardGraded.stimulate(cell, 10)
+    assert Agent.get(cell, &Map.get(&1, :charge)) == 10
+    Process.sleep(100)
     assert Agent.get(cell, &Map.get(&1, :charge)) == 0
   end
 end
