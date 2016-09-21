@@ -7,6 +7,10 @@ defmodule AI.Cell.StandardGraded do
     Agent.start_link(fn -> %AI.Cell.StandardGraded{} end)
   end
 
+  @doc """
+  Stimulates cell with a charge.  For graded cells, charges are passed to subscribing cells
+  on a gradient scale, i.e., there is no action potential.
+  """
   def stimulate(cell, transmitter) do
     original_charge = get(cell, :charge)
 
@@ -23,6 +27,9 @@ defmodule AI.Cell.StandardGraded do
     {put(publisher, :subscribers, subscribers), subscribers}
   end
 
+  @doc """
+  Get state data
+  """
   def get(cell, key) do
     Agent.get(cell, &Map.get(&1, key))
   end
@@ -32,13 +39,13 @@ defmodule AI.Cell.StandardGraded do
     Agent.update(cell, &Map.put(&1, key, value))
   end
 
-  def decay(cell) do
+  defp decay(cell) do
     Task.Supervisor.start_child(AI.TaskSupervisor, fn ->
       decay_task(cell)
     end)
   end
 
-  def decay_task(cell) do
+  defp decay_task(cell) do
     charge = get(cell, :charge)
     case charge do
       0.0 -> %{}
@@ -49,7 +56,7 @@ defmodule AI.Cell.StandardGraded do
     end
   end
 
-  def publish(cell) do
+  defp publish(cell) do
     if Map.get(cell, :subscribers) do
       Enum.each(Map.get(cell, :subscribers), &stimulate(&1, cell.charge))
     end
