@@ -53,4 +53,11 @@ defmodule AI.Cell do
         decay(cell)
     end
   end
+
+
+
+  @doc """
+  Publishes a charge to the subscribing cells.  This is called during the `stimulate/2` method
+  """
+  @callback publish(state :: term) :: term
 end

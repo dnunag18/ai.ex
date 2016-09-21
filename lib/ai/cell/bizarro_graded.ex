@@ -2,7 +2,8 @@ defmodule AI.Cell.BizarroGraded do
   @moduledoc """
   Graded cell that when it is stimulated with positive charges, it produces negative charges/trasmitters
   """
-
+  @behaviour AI.Cell
+  
   defstruct [subscribers: [], charge: 0.0, publish: &AI.Cell.BizarroGraded.publish/1]
 
   @spec start_link() :: {Keyword.t, term}
