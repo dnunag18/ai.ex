@@ -1,5 +1,8 @@
 defmodule AI.Cell.BizarroGraded do
   @behaviour AI.Cell
+  @moduledoc """
+  Graded cell that when it is stimulated with positive charges, it produces negative charges/trasmitters
+  """
 
   defstruct [subscribers: [], charge: 0.0]
 
@@ -28,7 +31,7 @@ defmodule AI.Cell.BizarroGraded do
   end
 
   @doc """
-  Get state data
+  Get cell's state for the specified key
   """
   def get(cell, key) do
     Agent.get(cell, &Map.get(&1, key))
