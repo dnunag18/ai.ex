@@ -6,7 +6,6 @@ defmodule AI.Supervisor do
   end
 
   def init(:ok) do
-    IO.puts "starting the app!"
     children = [
       worker(AI.Cell.StandardGraded, [AI.Cell.StandardGraded])
     ]
