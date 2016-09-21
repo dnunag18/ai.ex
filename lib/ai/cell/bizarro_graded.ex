@@ -1,4 +1,4 @@
-defmodule AI.Cell.StandardGraded do
+defmodule AI.Cell.BizarroGraded do
   @behaviour AI.Cell
 
   defstruct [subscribers: [], charge: 0.0]
@@ -58,7 +58,7 @@ defmodule AI.Cell.StandardGraded do
 
   defp publish(state) do
     if Map.get(state, :subscribers) do
-      Enum.each(Map.get(state, :subscribers), &stimulate(&1, state.charge))
+      Enum.each(Map.get(state, :subscribers), &stimulate(&1, -state.charge))
     end
     state
   end
