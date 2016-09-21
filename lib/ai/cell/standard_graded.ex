@@ -3,6 +3,7 @@ defmodule AI.Cell.StandardGraded do
   @moduledoc """
   Graded cell that when it is stimulated with positive charges, it produces positive charges/trasmitters
   """
+  
   defstruct [subscribers: [], charge: 0.0]
 
   def start_link do
