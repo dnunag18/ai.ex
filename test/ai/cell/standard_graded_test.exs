@@ -32,8 +32,8 @@ defmodule AI.Cell.StandardGradedTest do
 
   test "charge should decay over time", %{cell: cell} do
     {:ok, _} = StandardGraded.stimulate(cell, 10)
-    assert Agent.get(cell, &Map.get(&1, :charge)) == 10
+    assert StandardGraded.get(cell, :charge) == 10
     Process.sleep(100)
-    assert Agent.get(cell, &Map.get(&1, :charge)) == 0
+    assert StandardGraded.get(cell, :charge) == 0
   end
 end

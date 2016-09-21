@@ -23,7 +23,7 @@ defmodule AI.Cell.StandardGraded do
     {put(publisher, :subscribers, subscribers), subscribers}
   end
 
-  defp get(cell, key) do
+  def get(cell, key) do
     Agent.get(cell, &Map.get(&1, key))
   end
 
