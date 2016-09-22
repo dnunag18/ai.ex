@@ -1,4 +1,5 @@
 defmodule AI.Cell do
+  require Logger
   @moduledoc """
   """
 
@@ -6,16 +7,17 @@ defmodule AI.Cell do
   Stimulates cell with a charge.  For graded cells, charges are passed to subscribing cells
   on a gradient scale, i.e., there is no action potential.
   """
-  @spec stimulate(Agent.t, integer) :: {Keyword.t, term}
+  @spec stimulate(Agent.t, integer) :: {Keyword.t, term, term}
   def stimulate(cell, transmitter) do
     original_charge = get(cell, :charge)
+    decay_task = nil
 
     charge = original_charge + transmitter
     put(cell, :charge, charge)
-    if original_charge == 0.0 do
+    decay_task = if original_charge == 0.0 do
       decay(cell)
     end
-    {:ok, charge}
+    {:ok, charge, decay_task}
   end
 
   @spec stimulate(Agent.t, Agent.t) :: {:ok, Enum.t}
@@ -33,7 +35,6 @@ defmodule AI.Cell do
   end
 
   defp put(cell, key, value) do
-    # IO.puts "PUT #{key} #{value}"
     Agent.update(cell, &Map.put(&1, key, value))
   end
 
@@ -48,7 +49,8 @@ defmodule AI.Cell do
     case charge do
       0.0 -> %{}
       _ ->
-        Agent.cast(cell, get(cell, :publish))
+        publish = get(cell, :publish)
+        publish.(get(cell, :subscribers), charge)
         put(cell, :charge, Float.floor(charge / 2))
         decay(cell)
     end
@@ -59,5 +61,5 @@ defmodule AI.Cell do
   @doc """
   Publishes a charge to the subscribing cells.  This is called during the `stimulate/2` method
   """
-  @callback publish(state :: term) :: term
+  @callback publish(cell :: term) :: nil
 end

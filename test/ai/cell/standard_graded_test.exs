@@ -2,7 +2,7 @@ defmodule AI.Cell.StandardGradedTest do
   use ExUnit.Case, async: true
 
   @moduletag :capture_log
-  
+
   alias AI.Cell
 
   setup do
@@ -26,14 +26,8 @@ defmodule AI.Cell.StandardGradedTest do
   end
 
   test "should be able to stimulate the cell", %{cell: cell} do
-    {:ok, charge} = Cell.stimulate(cell, 10)
+    {:ok, charge, _} = Cell.stimulate(cell, 10)
     assert charge == 10
   end
 
-  test "charge should decay over time", %{cell: cell} do
-    {:ok, _} = Cell.stimulate(cell, 10)
-    assert Cell.get(cell, :charge) == 10
-    Process.sleep(100)
-    assert Cell.get(cell, :charge) == 0
-  end
 end
