@@ -5,7 +5,12 @@ defmodule AI.Cell.BizarroGraded do
   @behaviour AI.Cell
 
 
-  defstruct [subscribers: [], charge: 0.0, publish: &AI.Cell.BizarroGraded.publish/2]
+  defstruct [
+    subscribers: [],
+    charge: 0.0,
+    publish: &AI.Cell.BizarroGraded.publish/1,
+    threshold: 0.0
+  ]
 
   @spec start_link() :: {Keyword.t, term}
   def start_link do
@@ -20,5 +25,6 @@ defmodule AI.Cell.BizarroGraded do
     if subscribers do
       Enum.each(subscribers, &AI.Cell.stimulate(&1, -charge))
     end
+    {:published, charge}
   end
 end

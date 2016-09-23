@@ -26,7 +26,7 @@ defmodule AI.Cell.BizarroGradedTest do
   end
 
   test "should be able to stimulate the cell", %{cell: cell} do
-    {:ok, charge, _} = Cell.stimulate(cell, 10)
+    {:ok, charge, _, _} = Cell.stimulate(cell, 10)
     assert charge == 10
   end
 

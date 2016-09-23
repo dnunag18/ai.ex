@@ -1,6 +1,6 @@
 defmodule AI.Cell.StandardActionTest do
   use ExUnit.Case
-
+  import Task
   @moduletag :capture_log
 
   alias AI.Cell
@@ -28,18 +28,17 @@ defmodule AI.Cell.StandardActionTest do
   end
 
   test "should be able to stimulate the cell", %{cell: cell} do
-    {:ok, charge, _} = Cell.stimulate(cell, 10)
+    {:ok, charge, _, _} = Cell.stimulate(cell, 10)
     assert charge == 10
   end
 
   test "should not publish if charge is under threshold", %{cell: cell} do
-    # Agent.update(cell, &Map.put(&1, :publish, fn -> raise "dont get called" end))
-    # Cell.stimulate(cell, 5)
-
+    {:ok, charge, _, publish_task} = Cell.stimulate(cell, 5)
+    {publish_status, _} = Task.await(publish_task)
+    assert publish_status == :not_published
   end
 
   test "should publish if charge is >= threshold", %{cell: cell} do
-    # :ok = Agent.update(cell, &Map.put(&1, :publish, fn -> raise "nah man" end))
-    # {:ok, charge, stuff} = Cell.stimulate(cell, 20)
+    {:ok, charge, _, _} = Cell.stimulate(cell, 20)
   end
 end

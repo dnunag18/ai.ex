@@ -6,8 +6,11 @@ defmodule AI.Cell.StandardAction do
   @behaviour AI.Cell
 
   defstruct [
-    subscribers: [], charge: 0.0, threshold: 10, output: 20,
-    publish: &AI.Cell.StandardAction.publish/2
+    subscribers: [],
+    charge: 0.0,
+    threshold: 10,
+    output: 20,
+    publish: &AI.Cell.StandardAction.publish/1
   ]
 
   @spec start_link() :: {Keyword.t, term}
@@ -16,12 +19,13 @@ defmodule AI.Cell.StandardAction do
   end
 
   def publish(cell) do
-    [threshold, charge, subscribers, output] = Enum.map(
-      [:threshold, :charge, :subscribers, :output],
+    [charge, subscribers] = Enum.map(
+      [:charge, :subscribers],
       &AI.Cell.get(cell, &1)
     )
-    if threshold <= charge && subscribers do
-      Enum.each(subscribers, &AI.Cell.stimulate(&1, output))
+    if subscribers do
+      Enum.each(subscribers, &AI.Cell.stimulate(&1, charge))
     end
+    {:published, charge}
   end
 end
