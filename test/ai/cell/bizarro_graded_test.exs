@@ -1,5 +1,5 @@
 defmodule AI.Cell.BizarroGradedTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   @moduletag :capture_log
 
