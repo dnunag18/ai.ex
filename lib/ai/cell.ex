@@ -6,6 +6,12 @@ defmodule AI.Cell do
   @doc """
   Stimulates cell with a charge.  For graded cells, charges are passed to subscribing cells
   on a gradient scale, i.e., there is no action potential.
+
+  When `stimulate`-ing a cell, the accept, decay, publish task chain is initiated.
+  * The transmitter charge is added to the `input_charge` of the cell.
+  * The input charges are added to the `charge`
+  * The `charge` decays
+  * The cell publishes the charge to the subscribers
   """
   @spec stimulate(Agent.t, integer) :: {Keyword.t, term, term, term}
   def stimulate(cell, transmitter) do
@@ -61,7 +67,7 @@ defmodule AI.Cell do
     get(cell, :charge)
   end
 
-  def accept(cell) do
+  defp accept(cell) do
     charge = get(cell, :charge)
     input_charge = get(cell, :input_charge)
     Logger.debug "accept #{inspect cell} #{input_charge} -> #{charge}"
@@ -69,7 +75,7 @@ defmodule AI.Cell do
     put(cell, :input_charge, 0.0)
   end
 
-  def decay(cell) do
+  defp decay(cell) do
     charge = get(cell, :charge)
     Logger.debug "decay #{inspect cell} #{charge}"
     put(cell, :charge, Float.floor(charge / 2))
@@ -86,7 +92,7 @@ defmodule AI.Cell do
   end
 
   @doc """
-  Publishes a charge to the subscribing cells.  This is called during the `stimulate/2` method
+  Publishes a charge to the subscribing cells.  This is called in the publish phase of the accept, decay, publish task chain
   """
   @callback publish(cell :: term) :: term
 end
