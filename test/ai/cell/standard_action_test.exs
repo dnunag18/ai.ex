@@ -1,6 +1,6 @@
 defmodule AI.Cell.StandardActionTest do
   use ExUnit.Case
-  import Task
+
   @moduletag :capture_log
 
   alias AI.Cell
@@ -17,28 +17,20 @@ defmodule AI.Cell.StandardActionTest do
     {:ok, cell: cell, subscriber: subscriber}
   end
 
-  test "should be able to create an instance" do
-    {:ok, cell} = AI.Cell.StandardAction.start_link
-    assert cell != nil
+  test "should publish to subscribers after it is stimulated and above the threshold", %{cell: cell, subscriber: subscriber} do
+    assert Cell.get(subscriber, :input_charge) == 0.0
+    {:ok, accept_task} = Cell.stimulate(cell, 40)
+    Task.await(accept_task)
+    charge = Cell.get(subscriber, :input_charge) + Cell.get(subscriber, :charge)
+    assert charge > 0.0
+  end
+  
+  test "should not publish to subscribers if charge is below threshold", %{cell: cell, subscriber: subscriber} do
+    assert Cell.get(subscriber, :input_charge) == 0.0
+    Cell.subscribe(cell, subscriber)
+    {:ok, accept_task} = Cell.stimulate(cell, 3)
+    Task.await(accept_task)
+    assert Cell.get(subscriber, :input_charge) == 0.0
   end
 
-  test "should be able to add subscribers", %{cell: cell} do
-    {:ok, subscribers} = Cell.subscribe(cell, cell)
-    assert Enum.any?(subscribers, fn(s) -> s == cell end)
-  end
-
-  test "should be able to stimulate the cell", %{cell: cell} do
-    {:ok, charge, _, _} = Cell.stimulate(cell, 10)
-    assert charge == 10
-  end
-
-  test "should not publish if charge is under threshold", %{cell: cell} do
-    {:ok, charge, _, publish_task} = Cell.stimulate(cell, 5)
-    {publish_status, _} = Task.await(publish_task)
-    assert publish_status == :not_published
-  end
-
-  test "should publish if charge is >= threshold", %{cell: cell} do
-    {:ok, charge, _, _} = Cell.stimulate(cell, 20)
-  end
 end

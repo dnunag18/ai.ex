@@ -8,6 +8,7 @@ defmodule AI.Cell.StandardGraded do
   defstruct [
     subscribers: [],
     charge: 0.0,
+    input_charge: 0.0,
     publish: &AI.Cell.StandardGraded.publish/1,
     threshold: 0.0
   ]
@@ -25,6 +26,5 @@ defmodule AI.Cell.StandardGraded do
     if subscribers do
       Enum.each(subscribers, &AI.Cell.stimulate(&1, charge))
     end
-    {:published, charge}
   end
 end

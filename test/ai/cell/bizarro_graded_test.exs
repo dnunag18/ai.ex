@@ -15,19 +15,12 @@ defmodule AI.Cell.BizarroGradedTest do
     {:ok, cell: cell}
   end
 
-  test "should be able to create an instance" do
-    {:ok, cell} = AI.Cell.BizarroGraded.start_link
-    assert cell != nil
+  test "should publish to subscribers after it is stimulated", %{cell: cell} do
+    {:ok, subscriber} = AI.Cell.BizarroGraded.start_link
+    assert Cell.get(subscriber, :input_charge) == 0.0
+    Cell.subscribe(cell, subscriber)
+    {:ok, accept_task} = Cell.stimulate(cell, 10)
+    Task.await(accept_task)
+    assert Cell.get(subscriber, :input_charge) < 0.0
   end
-
-  test "should be able to add subscribers", %{cell: cell} do
-    {:ok, subscribers} = Cell.subscribe(cell, cell)
-    assert Enum.any?(subscribers, fn(s) -> s == cell end)
-  end
-
-  test "should be able to stimulate the cell", %{cell: cell} do
-    {:ok, charge, _, _} = Cell.stimulate(cell, 10)
-    assert charge == 10
-  end
-
 end

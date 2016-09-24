@@ -1,4 +1,5 @@
 defmodule AI.Cell.StandardAction do
+
   @moduledoc """
   Graded cell that when it is stimulated with positive charges, it produces positive charges/trasmitters
   """
@@ -8,6 +9,7 @@ defmodule AI.Cell.StandardAction do
   defstruct [
     subscribers: [],
     charge: 0.0,
+    input_charge: 0.0,
     threshold: 10,
     output: 20,
     publish: &AI.Cell.StandardAction.publish/1
@@ -26,6 +28,5 @@ defmodule AI.Cell.StandardAction do
     if subscribers do
       Enum.each(subscribers, &AI.Cell.stimulate(&1, charge))
     end
-    {:published, charge}
   end
 end

@@ -9,16 +9,18 @@ defmodule AI.Cell do
   """
   @spec stimulate(Agent.t, integer) :: {Keyword.t, term, term, term}
   def stimulate(cell, transmitter) do
-    original_charge = get(cell, :charge)
+    Logger.debug "stimulate #{inspect cell} #{transmitter}"
+    input_charge = get(cell, :input_charge)
+    charge = get(cell, :charge)
 
-    charge = original_charge + transmitter
-    put(cell, :charge, charge)
+    put(cell, :input_charge, input_charge + transmitter)
 
-    {decay_task, publish_task} = case original_charge do
-      0.0 -> start_decay_and_publish(cell)
-      _ -> {nil, nil}
+    task = case {charge, input_charge} do
+      {0.0, 0.0} -> start_accept_decay_publish(cell)
+      _ -> nil
     end
-    {:ok, charge, decay_task, publish_task}
+
+    {:ok, task}
   end
 
   @spec stimulate(Agent.t, Agent.t) :: {:ok, Enum.t}
@@ -39,39 +41,52 @@ defmodule AI.Cell do
     Agent.update(cell, &Map.put(&1, key, value))
   end
 
-  defp start_decay_and_publish(cell) do
-    decay = Task.Supervisor.async(AI.Supervisor, fn ->
-      start_decay(cell)
+  defp start_accept_decay_publish(cell) do
+    Task.Supervisor.async(AI.Supervisor, fn ->
+      charge = accept_decay_publish(cell)
+
+      # continue task chain if there is still any charges
+      if charge > 0.0 do
+        start_accept_decay_publish(cell)
+      end
+
+      charge
     end)
-    publish = Task.Supervisor.async(AI.Supervisor, fn ->
-      start_publish(cell)
-    end)
-    {decay, publish}
   end
 
-  defp start_decay(cell) do
-    charge = get(cell, :charge)
-    case charge do
-      0.0 -> 0
-      _ ->
-        put(cell, :charge, Float.floor(charge / 2))
-        start_decay_and_publish(cell)
-        get(cell, :charge)
-    end
+  defp accept_decay_publish(cell) do
+    accept(cell)
+    decay(cell)
+    publish(cell)
+    get(cell, :charge)
   end
 
-  defp start_publish(cell) do
+  def accept(cell) do
     charge = get(cell, :charge)
-    if charge >= get(cell, :threshold) do
+    input_charge = get(cell, :input_charge)
+    Logger.debug "accept #{inspect cell} #{input_charge} -> #{charge}"
+    put(cell, :charge, charge + input_charge)
+    put(cell, :input_charge, 0.0)
+  end
+
+  def decay(cell) do
+    charge = get(cell, :charge)
+    Logger.debug "decay #{inspect cell} #{charge}"
+    put(cell, :charge, Float.floor(charge / 2))
+  end
+
+  defp publish(cell) do
+    charge = get(cell, :charge)
+    threshold = get(cell, :threshold)
+    Logger.debug "publish #{inspect cell} #{charge}"
+    if charge >= threshold do
       publish = get(cell, :publish)
       publish.(cell)
-    else
-      {:not_published, charge}
     end
   end
 
   @doc """
   Publishes a charge to the subscribing cells.  This is called during the `stimulate/2` method
   """
-  @callback publish(cell :: term) :: {atom, term}
+  @callback publish(cell :: term) :: term
 end
