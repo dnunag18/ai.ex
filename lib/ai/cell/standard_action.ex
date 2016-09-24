@@ -12,7 +12,7 @@ defmodule AI.Cell.StandardAction do
     input_charge: 0.0,
     threshold: 10,
     output: 20,
-    publish: &AI.Cell.StandardAction.publish/1
+    impulse: &AI.Cell.StandardAction.impulse/3
   ]
 
   @spec start_link() :: {Keyword.t, term}
@@ -20,13 +20,13 @@ defmodule AI.Cell.StandardAction do
     Agent.start_link(fn -> %AI.Cell.StandardAction{} end)
   end
 
-  def publish(cell) do
-    [charge, subscribers] = Enum.map(
-      [:charge, :subscribers],
-      &AI.Cell.get(cell, &1)
-    )
+  def impulse(cell, charge, subscribers) do
+    output = AI.Cell.get(cell, :output)
     if subscribers do
-      Enum.each(subscribers, &AI.Cell.stimulate(&1, charge))
+      Enum.each(subscribers, &AI.Cell.stimulate(&1, output))
     end
+
+    # refractory period
+    AI.Cell.put(cell, :charge, -Float.floor(output / 2))
   end
 end

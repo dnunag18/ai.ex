@@ -43,7 +43,10 @@ defmodule AI.Cell do
     Agent.get(cell, &Map.get(&1, key))
   end
 
-  defp put(cell, key, value) do
+  @doc """
+  Update cell's state for the specified key.  Use carefully
+  """
+  def put(cell, key, value) do
     Agent.update(cell, &Map.put(&1, key, value))
   end
 
@@ -86,13 +89,17 @@ defmodule AI.Cell do
     threshold = get(cell, :threshold)
     Logger.debug "publish #{inspect cell} #{charge}"
     if charge >= threshold do
-      publish = get(cell, :publish)
-      publish.(cell)
+      impulse = get(cell, :impulse)
+      subscribers = get(cell, :subscribers)
+      if Enum.count(subscribers) > 0 do
+        charge = Float.floor(charge / Enum.count(subscribers))
+        impulse.(cell, charge, subscribers)
+      end
     end
   end
 
   @doc """
   Publishes a charge to the subscribing cells.  This is called in the publish phase of the accept, decay, publish task chain
   """
-  @callback publish(cell :: term) :: term
+  @callback impulse(cell :: Agent.t, charge :: Float.t, subscribers :: List.t) :: term
 end

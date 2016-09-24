@@ -44,4 +44,21 @@ defmodule AI.CellTest do
     assert Cell.get(cell, :charge) < charge
   end
 
+
+  test "should publish a transmitter that is proportional to the number of subscribers", %{cell: cell} do
+    charge = 10
+    impulse = fn(_, transmitter, _) ->
+      assert transmitter == Float.floor(Float.floor(charge / 2) / 2)
+    end
+    Cell.put(cell, :impulse, impulse)
+
+    for _ <- 0..1 do
+      {:ok, subscriber} = AI.Cell.StandardGraded.start_link
+      subscriber
+    end |> Enum.each(&Cell.subscribe(cell, &1))
+
+    {:ok, task} = Cell.stimulate(cell, charge)
+    Task.await(task)
+  end
+
 end

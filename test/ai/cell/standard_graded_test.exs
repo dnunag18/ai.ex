@@ -23,4 +23,5 @@ defmodule AI.Cell.StandardGradedTest do
     Task.await(accept_task)
     assert Cell.get(subscriber, :input_charge) > 0.0
   end
+
 end

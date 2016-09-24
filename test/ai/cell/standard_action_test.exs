@@ -24,7 +24,7 @@ defmodule AI.Cell.StandardActionTest do
     charge = Cell.get(subscriber, :input_charge) + Cell.get(subscriber, :charge)
     assert charge > 0.0
   end
-  
+
   test "should not publish to subscribers if charge is below threshold", %{cell: cell, subscriber: subscriber} do
     assert Cell.get(subscriber, :input_charge) == 0.0
     Cell.subscribe(cell, subscriber)

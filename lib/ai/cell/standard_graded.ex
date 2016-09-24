@@ -9,7 +9,7 @@ defmodule AI.Cell.StandardGraded do
     subscribers: [],
     charge: 0.0,
     input_charge: 0.0,
-    publish: &AI.Cell.StandardGraded.publish/1,
+    impulse: &AI.Cell.StandardGraded.impulse/3,
     threshold: 0.0
   ]
 
@@ -18,11 +18,7 @@ defmodule AI.Cell.StandardGraded do
     Agent.start_link(fn -> %AI.Cell.StandardGraded{} end)
   end
 
-  def publish(cell) do
-    [charge, subscribers] = Enum.map(
-      [:charge, :subscribers],
-      &AI.Cell.get(cell, &1)
-    )
+  def impulse(_, charge, subscribers) do
     if subscribers do
       Enum.each(subscribers, &AI.Cell.stimulate(&1, charge))
     end
