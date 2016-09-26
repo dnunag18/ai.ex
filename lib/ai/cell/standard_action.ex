@@ -12,7 +12,8 @@ defmodule AI.Cell.StandardAction do
     input_charge: 0.0,
     threshold: 10,
     output: 20,
-    impulse: &AI.Cell.StandardAction.impulse/3
+    impulse: &AI.Cell.StandardAction.impulse/3,
+    name: "-"
   ]
 
   @spec start_link() :: {Keyword.t, term}

@@ -41,19 +41,25 @@ defmodule AI.Circuit.CenterSurround do
 
   alias AI.Cell
 
-  defstruct [input: [[]], output: [[]]]
+  defstruct [inputs: [[]], outputs: [[]]]
 
   def create do
     # cells
-    ganglion = Cell.StandardAction.start_link
-    bipolar = Cell.StandardGraded.start_link
+    {:ok, ganglion} = Cell.StandardAction.start_link
+    {:ok, bipolar} = Cell.StandardGraded.start_link
+    Cell.put(ganglion, :name, "ganglion")
+    Cell.put(bipolar, :name, "bipolar")
 
-    in_to_out = Cell.BizarroGraded.start_link
-    out_to_in = Cell.BizarroGraded.start_link
+    {:ok, in_to_out} = Cell.BizarroGraded.start_link
+    {:ok, out_to_in} = Cell.BizarroGraded.start_link
+    Cell.put(in_to_out, :name, "horizontal 1")
+    Cell.put(out_to_in, :name, "horizontal 2")
 
-    cones = for i <- 0..2 do
-      for j <- 0..2 do
-        Cell.StandardGraded.start_link
+    cones = for _ <- 0..2 do
+      for _ <- 0..2 do
+        {:ok, cone} = Cell.StandardGraded.start_link
+        Cell.put(cone, :name, "cone")
+        cone
       end
     end
 
@@ -75,9 +81,12 @@ defmodule AI.Circuit.CenterSurround do
       end
     end
 
-    %AI.Circuit.CenterSurround{
-      input: cones,
-      output: [[ganglion]]
+    {
+      :ok,
+      %AI.Circuit.CenterSurround{
+        inputs: cones,
+        outputs: [[ganglion]]
+      }
     }
   end
 

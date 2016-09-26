@@ -10,7 +10,8 @@ defmodule AI.Cell.StandardGraded do
     charge: 0.0,
     input_charge: 0.0,
     impulse: &AI.Cell.StandardGraded.impulse/3,
-    threshold: 0.0
+    threshold: 0.0,
+    name: "-"
   ]
 
   @spec start_link() :: {Keyword.t, term}

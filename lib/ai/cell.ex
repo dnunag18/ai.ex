@@ -15,14 +15,17 @@ defmodule AI.Cell do
   """
   @spec stimulate(Agent.t, integer) :: {Keyword.t, term, term, term}
   def stimulate(cell, transmitter) do
-    Logger.debug "stimulate #{inspect cell} #{transmitter}"
     input_charge = get(cell, :input_charge)
     charge = get(cell, :charge)
 
     put(cell, :input_charge, input_charge + transmitter)
+    Logger.debug "#{inspect cell} #{get(cell, :name)} stimulate() transmitter: #{transmitter}, charge: #{charge}, input_charge: #{input_charge}"
 
-    task = case {charge, input_charge} do
-      {0.0, 0.0} -> start_accept_decay_publish(cell)
+    stimulator = get(cell, :stimulator)
+
+    task = case {charge, input_charge, stimulator != nil} do
+      {0.0, _, :false} -> start_accept_decay_publish(cell)
+      {_, _, :true} -> stimulator.(cell, transmitter)
       _ -> nil
     end
 
@@ -51,12 +54,16 @@ defmodule AI.Cell do
   end
 
   defp start_accept_decay_publish(cell) do
-    Task.Supervisor.async(AI.Supervisor, fn ->
+    Task.Supervisor.async_nolink(AI.Supervisor, fn ->
       charge = accept_decay_publish(cell)
+      input_charge = get(cell, :input_charge)
+
+      Logger.debug "#{inspect cell} #{inspect self()} async start_accept_decay_publish() charge: #{charge}"
 
       # continue task chain if there is still any charges
-      if charge > 0.0 do
-        start_accept_decay_publish(cell)
+      case {charge, input_charge} do
+        {0.0, 0.0} -> nil
+        _ -> start_accept_decay_publish(cell)
       end
 
       charge
@@ -65,36 +72,38 @@ defmodule AI.Cell do
 
   defp accept_decay_publish(cell) do
     accept(cell)
-    decay(cell)
     publish(cell)
+    decay(cell)
     get(cell, :charge)
   end
 
   defp accept(cell) do
     charge = get(cell, :charge)
     input_charge = get(cell, :input_charge)
-    Logger.debug "accept #{inspect cell} #{input_charge} -> #{charge}"
+    Logger.debug "#{inspect cell} #{inspect self()} accept() #{input_charge} -> #{charge}"
     put(cell, :charge, charge + input_charge)
     put(cell, :input_charge, 0.0)
   end
 
   defp decay(cell) do
     charge = get(cell, :charge)
-    Logger.debug "decay #{inspect cell} #{charge}"
-    put(cell, :charge, Float.floor(charge / 2))
+    Logger.debug "#{inspect cell} #{inspect self()} decay() #{charge}"
+    case {charge > 0, charge < 0} do
+      {:true, _} -> put(cell, :charge, Float.floor(charge / 2))
+      {_, :true} -> put(cell, :charge, Float.ceil(charge / 2))
+      _ -> nil
+    end
   end
 
   defp publish(cell) do
     charge = get(cell, :charge)
     threshold = get(cell, :threshold)
-    Logger.debug "publish #{inspect cell} #{charge}"
-    if charge >= threshold do
+    subscribers = get(cell, :subscribers)
+    if charge >= threshold && charge != 0.0 do
+      Logger.debug "#{inspect cell} #{inspect self()} publish charge: #{charge}, subscribers: #{inspect subscribers}, threshold: #{threshold}"
       impulse = get(cell, :impulse)
-      subscribers = get(cell, :subscribers)
-      if Enum.count(subscribers) > 0 do
-        charge = Float.floor(charge / Enum.count(subscribers))
-        impulse.(cell, charge, subscribers)
-      end
+      charge = Float.floor(charge / max(Enum.count(subscribers), 1))
+      impulse.(cell, charge, subscribers)
     end
   end
 
