@@ -28,5 +28,6 @@ defmodule AI.Cell.Debug.Logger do
 
   def stimulator(cell, transmitter) do
     Logger.info "#{inspect cell} - transmitted #{transmitter}"
+    AI.Cell.put(cell, :input_charge, 0.0)
   end
 end

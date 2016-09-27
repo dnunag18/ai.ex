@@ -15,24 +15,13 @@ defmodule AI.Cell do
   """
   @spec stimulate(Agent.t, integer) :: {Keyword.t, term, term, term}
   def stimulate(cell, transmitter) do
-    input_charge = get(cell, :input_charge)
-    charge = get(cell, :charge)
-
-    put(cell, :input_charge, input_charge + transmitter)
-    Logger.debug "#{inspect cell} #{get(cell, :name)} stimulate() transmitter: #{transmitter}, charge: #{charge}, input_charge: #{input_charge}"
-
-    stimulator = get(cell, :stimulator)
-
-    task = case {charge, input_charge, stimulator != nil} do
-      {0.0, _, :false} -> start_accept_decay_publish(cell)
-      {_, _, :true} -> stimulator.(cell, transmitter)
-      _ -> nil
-    end
-
-    {:ok, task}
+    Agent.get_and_update(cell, fn(state) ->
+      charges = state.charge ++ transmitter
+      {charges, Map.put(cell, :charge, charges)}
+    end)
   end
 
-  @spec stimulate(Agent.t, Agent.t) :: {:ok, Enum.t}
+  @spec subscribe(Agent.t, Agent.t) :: {:ok, Enum.t}
   def subscribe(publisher, subscriber) do
     subscribers = get(publisher, :subscribers) ++ [subscriber]
     {put(publisher, :subscribers, subscribers), subscribers}
@@ -53,57 +42,52 @@ defmodule AI.Cell do
     Agent.update(cell, &Map.put(&1, key, value))
   end
 
-  defp start_accept_decay_publish(cell) do
-    Task.Supervisor.async_nolink(AI.Supervisor, fn ->
-      charge = accept_decay_publish(cell)
-      input_charge = get(cell, :input_charge)
+  defp start_decayer(cell) do
+    Task.start_link(decay_and_relay(cell))
+  end
 
-      Logger.debug "#{inspect cell} #{inspect self()} async start_accept_decay_publish() charge: #{charge}"
+  defp decay_and_relay(cell) do
+    fn ->
+      # get charge
+      charges = Agent.get_and_update(cell, fn(state) ->
+        charges = state.charges ++ transmitter
+        {charges, []}
+      end)
 
-      # continue task chain if there is still any charges
-      case {charge, input_charge} do
-        {0.0, 0.0} -> nil
-        _ -> start_accept_decay_publish(cell)
+      # relay charge
+      threshold = get(cell, :threshold)
+      sum_charge = Enum.reduce(charges, &(&1 + &2))
+
+      if sum_charge >= threshold && sum_charge != 0.0 do
+        # get subscribers, and call stimulate on them
+        subscribers = get(cell, :subscribers)
+        Enum.each(
+          subscribers,
+          fn ->
+            Task.start(fn ->
+              stimulate(cell, sum_charge)
+            end)
+          end
+        )
       end
 
-      charge
-    end)
-  end
+      # decay
+      decayed_charge = case {sum_charge > 0, sum_charge < 0} do
+        {:true, _} -> Float.floor(sum_charge / 2)
+        {_, :true} -> Float.ceil(sum_charge / 2)
+        _ -> sum_charge
+      end
 
-  defp accept_decay_publish(cell) do
-    accept(cell)
-    publish(cell)
-    decay(cell)
-    get(cell, :charge)
-  end
+      # put back decayed charge
+      Agent.get_and_update(
+        cell,
+        fn(state) ->
+          charges = state.charges
+          {charges, charges ++ [decayed_charge]}
+        end
+      )
 
-  defp accept(cell) do
-    charge = get(cell, :charge)
-    input_charge = get(cell, :input_charge)
-    Logger.debug "#{inspect cell} #{inspect self()} accept() #{input_charge} -> #{charge}"
-    put(cell, :charge, charge + input_charge)
-    put(cell, :input_charge, 0.0)
-  end
-
-  defp decay(cell) do
-    charge = get(cell, :charge)
-    Logger.debug "#{inspect cell} #{inspect self()} decay() #{charge}"
-    case {charge > 0, charge < 0} do
-      {:true, _} -> put(cell, :charge, Float.floor(charge / 2))
-      {_, :true} -> put(cell, :charge, Float.ceil(charge / 2))
-      _ -> nil
-    end
-  end
-
-  defp publish(cell) do
-    charge = get(cell, :charge)
-    threshold = get(cell, :threshold)
-    subscribers = get(cell, :subscribers)
-    if charge >= threshold && charge != 0.0 do
-      Logger.debug "#{inspect cell} #{inspect self()} publish charge: #{charge}, subscribers: #{inspect subscribers}, threshold: #{threshold}"
-      impulse = get(cell, :impulse)
-      charge = Float.floor(charge / max(Enum.count(subscribers), 1))
-      impulse.(cell, charge, subscribers)
+      start_decayer(cell)
     end
   end
 
