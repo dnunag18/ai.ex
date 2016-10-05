@@ -16,6 +16,7 @@ defmodule AI.Mixfile do
   def application do
     [
       applications: [:logger],
+      #mod: {Experiment, []}
       mod: {AI, []}
     ]
   end
