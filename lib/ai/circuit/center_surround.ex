@@ -45,38 +45,33 @@ defmodule AI.Circuit.CenterSurround do
 
   def create do
     # cells
-    {:ok, ganglion} = Cell.StandardAction.start_link
-    {:ok, bipolar} = Cell.StandardGraded.start_link
-    Cell.put(ganglion, :name, "ganglion")
-    Cell.put(bipolar, :name, "bipolar")
+    {ganglion, _} = Cell.StandardAction.start_link
+    {bipolar, _} = Cell.StandardGraded.start_link
 
-    {:ok, in_to_out} = Cell.BizarroGraded.start_link
-    {:ok, out_to_in} = Cell.BizarroGraded.start_link
-    Cell.put(in_to_out, :name, "horizontal 1")
-    Cell.put(out_to_in, :name, "horizontal 2")
+    {in_to_out, _} = Cell.InhibitorGraded.start_link
+    {out_to_in, _} = Cell.InhibitorGraded.start_link
 
     cones = for _ <- 0..2 do
       for _ <- 0..2 do
-        {:ok, cone} = Cell.StandardGraded.start_link
-        Cell.put(cone, :name, "cone")
+        {cone, _} = Cell.StandardGraded.start_link
         cone
       end
     end
 
     # connections
-    Cell.subscribe(bipolar, ganglion)
+    GenEvent.call(bipolar, Cell.StandardGraded, {:add_subscriber, ganglion})
 
     for i <- 0..2 do
       for j <- 0..2 do
         cone = at(cones, i, j)
         case {i, j} do
           {1, 1} ->
-            Cell.subscribe(cone, in_to_out)
-            Cell.subscribe(out_to_in, cone)
-            Cell.subscribe(cone, bipolar)
+            GenEvent.call(cone, Cell.StandardGraded, {:add_subscriber, in_to_out})
+            GenEvent.call(out_to_in, Cell.InhibitorGraded, {:add_subscriber, cone})
+            GenEvent.call(cone, Cell.StandardGraded, {:add_subscriber, bipolar})
           {_, _} ->
-            Cell.subscribe(cone, out_to_in)
-            Cell.subscribe(in_to_out, cone)
+            GenEvent.call(cone, Cell.StandardGraded, {:add_subscriber, out_to_in})
+            GenEvent.call(in_to_out, Cell.InhibitorGraded, {:add_subscriber, cone})
         end
       end
     end

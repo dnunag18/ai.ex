@@ -73,7 +73,7 @@ defmodule AI.Cell.StandardGraded do
   end
   
   defp relay(charge, pid) do
-    if charge > 0 do
+    if charge != 0 do
       subscribers = GenEvent.call(pid, __MODULE__, :subscribers)
       num_subscribers = Enum.count(subscribers)
       Enum.each(subscribers, &GenEvent.notify(&1, {:stimulate, charge / num_subscribers}))

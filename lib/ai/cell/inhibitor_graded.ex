@@ -1,4 +1,4 @@
-defmodule AI.Cell.StandardAction do
+defmodule AI.Cell.InhibitorGraded do
   @moduledoc """
   Graded cell that when it is stimulated with positive charges, it produces positive charges/trasmitters
   """
@@ -6,7 +6,7 @@ defmodule AI.Cell.StandardAction do
 
   defstruct [
     subscribers: [],
-    threshold: 50
+    threshold: 0.0
   ]
 
   def handle_event({:stimulate, transmitter}, state) do
@@ -21,10 +21,6 @@ defmodule AI.Cell.StandardAction do
     state = Map.put(state, :subscribers, [subscriber|state.subscribers])
     {:ok, state.subscribers, state}
   end
-  
-  def handle_call(:threshold, state) do
-    {:ok, state.threshold, state}
-  end
 
   def start_link do
     state = %__MODULE__{}
@@ -36,7 +32,6 @@ defmodule AI.Cell.StandardAction do
   end
   
   defp start_processor(pid) do
-    threshold = GenEvent.call(pid, __MODULE__, :threshold)
     {:ok, task} = Task.start_link(fn ->
       GenEvent.stream(pid)
       |> Stream.transform(%{charges: []}, fn({:stimulate, transmitter}, acc) ->
@@ -45,11 +40,7 @@ defmodule AI.Cell.StandardAction do
         
         charge = calculate_charge(acc.charges, now)
 
-        if charge > threshold do
-          {[charge], acc}
-        else
-          {[], acc}
-        end
+        {[charge], acc}
       end)
       |> Enum.each(&relay(&1, pid))
     end)
@@ -82,8 +73,10 @@ defmodule AI.Cell.StandardAction do
   end
   
   defp relay(charge, pid) do
-    subscribers = GenEvent.call(pid, __MODULE__, :subscribers)
-    num_subscribers = Enum.count(subscribers)
-    Enum.each(subscribers, &GenEvent.notify(&1, {:stimulate, charge / num_subscribers}))
+    if charge > 0 do
+      subscribers = GenEvent.call(pid, __MODULE__, :subscribers)
+      num_subscribers = Enum.count(subscribers)
+      Enum.each(subscribers, &GenEvent.notify(&1, {:stimulate, -charge / num_subscribers}))
+    end
   end
 end

@@ -1,36 +1,28 @@
 defmodule AI.Cell.StandardActionTest do
   use ExUnit.Case
 
-  @moduletag :capture_log
-
-  alias AI.Cell
-
   setup do
-    Application.stop(:ai)
-    :ok = Application.start(:ai)
+    {cell, _} = AI.Cell.StandardAction.start_link
+    {:ok, cell: cell}
   end
 
-  setup do
-    {:ok, cell} = AI.Cell.StandardAction.start_link
-    {:ok, subscriber } = AI.Cell.StandardAction.start_link
-    Cell.subscribe(cell, subscriber)
-    {:ok, cell: cell, subscriber: subscriber}
+  test "should add a subscriber", %{cell: cell} do
+    subscriber = AI.Cell.StandardAction.start_link
+    subscribers = GenEvent.call(cell, AI.Cell.StandardAction, {:add_subscriber, subscriber})
+    assert Enum.count(subscribers) == 1
+    assert Enum.at(subscribers, 0) == subscriber
+    GenEvent.stop(cell)
   end
 
-  test "should publish to subscribers after it is stimulated and above the threshold", %{cell: cell, subscriber: subscriber} do
-    assert Cell.get(subscriber, :input_charge) == 0.0
-    {:ok, accept_task} = Cell.stimulate(cell, 40)
-    Task.await(accept_task)
-    charge = Cell.get(subscriber, :input_charge) + Cell.get(subscriber, :charge)
-    assert charge > 0.0
-  end
+  test "should stimulate the subscriber", %{cell: cell} do
+    {source, _} = AI.Cell.StandardGraded.start_link
+    _ = GenEvent.call(source, AI.Cell.StandardGraded, {:add_subscriber, cell})
+    :timer.sleep(1000)
+    for _ <- 0..100 do
+      :ok = GenEvent.notify(source, {:stimulate, 10})
+    end
 
-  test "should not publish to subscribers if charge is below threshold", %{cell: cell, subscriber: subscriber} do
-    assert Cell.get(subscriber, :input_charge) == 0.0
-    Cell.subscribe(cell, subscriber)
-    {:ok, accept_task} = Cell.stimulate(cell, 3)
-    Task.await(accept_task)
-    assert Cell.get(subscriber, :input_charge) == 0.0
+    :timer.sleep(1000)
   end
 
 end

@@ -1,4 +1,4 @@
-defmodule AI.Cell.BizarroGradedTest do
+defmodule AI.Cell.InhibitorGradedTest do
   use ExUnit.Case
 
   @moduletag :capture_log
@@ -11,12 +11,12 @@ defmodule AI.Cell.BizarroGradedTest do
   end
 
   setup do
-    {:ok, cell} = AI.Cell.BizarroGraded.start_link
+    {:ok, cell} = AI.Cell.InhibitorGraded.start_link
     {:ok, cell: cell}
   end
 
   test "should publish to subscribers after it is stimulated", %{cell: cell} do
-    {:ok, subscriber} = AI.Cell.BizarroGraded.start_link
+    {:ok, subscriber} = AI.Cell.InhibitorGraded.start_link
     assert Cell.get(subscriber, :input_charge) == 0.0
     Cell.subscribe(cell, subscriber)
     {:ok, accept_task} = Cell.stimulate(cell, 10)

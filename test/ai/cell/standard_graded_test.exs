@@ -19,7 +19,7 @@ defmodule AI.Cell.StandardGradedTest do
     _ = GenEvent.call(cell, AI.Cell.StandardGraded, {:add_subscriber, subscriber})
     :timer.sleep(1000)
     for _ <- 0..100 do
-      :ok = GenEvent.notify(cell, {:stimulate, 10})
+      :ok = GenEvent.notify(cell, {:stimulate, 20})
     end
 
     :timer.sleep(1000)
