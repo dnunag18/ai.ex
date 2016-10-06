@@ -6,7 +6,7 @@ defmodule AI.Cell.StandardAction do
 
   defstruct [
     subscribers: [],
-    threshold: 50
+    threshold: 5
   ]
 
   def handle_event({:stimulate, transmitter}, state) do
@@ -72,12 +72,12 @@ defmodule AI.Cell.StandardAction do
       {t, ts} = el
       diff = :timer.now_diff(now, ts)
       val = cond do
-        diff < 100 -> t
-        diff < 200 -> t / 2
-        diff < 300 -> t / 4
+        diff < 10 -> t
+        diff < 20 -> t / 2
+        diff < 30 -> t / 4
         :true -> 0
       end
-      sum + val
+      Enum.max([Enum.min([sum + val, 10]), -10])
     end)
   end
   

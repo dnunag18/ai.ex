@@ -63,12 +63,12 @@ defmodule AI.Cell.InhibitorGraded do
       {t, ts} = el
       diff = :timer.now_diff(now, ts)
       val = cond do
-        diff < 100 -> t
-        diff < 200 -> t / 2
-        diff < 300 -> t / 4
+        diff < 10 -> t
+        diff < 20 -> t / 2
+        diff < 30 -> t / 4
         :true -> 0
       end
-      sum + val
+      Enum.max([Enum.min([sum + val, 10]), -10])
     end)
   end
   
