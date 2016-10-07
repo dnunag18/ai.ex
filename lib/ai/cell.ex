@@ -43,7 +43,7 @@ defmodule AI.Cell do
   end
 
   defp start_decayer(cell) do
-    Task.start_link(decay_and_relay(cell))
+    Task.start_nolink(decay_and_relay(cell))
   end
 
   defp decay_and_relay(cell) do
@@ -69,25 +69,27 @@ defmodule AI.Cell do
             end)
           end
         )
-      end
 
-      # decay
-      decayed_charge = case {sum_charge > 0, sum_charge < 0} do
-        {:true, _} -> Float.floor(sum_charge / 2)
-        {_, :true} -> Float.ceil(sum_charge / 2)
-        _ -> sum_charge
-      end
 
-      # put back decayed charge
-      Agent.get_and_update(
-        cell,
-        fn(state) ->
-          charges = state.charges
-          {charges, charges ++ [decayed_charge]}
+        # decay
+        decayed_charge = case {sum_charge > 0, sum_charge < 0} do
+          {:true, _} -> Float.floor(sum_charge / 2)
+          {_, :true} -> Float.ceil(sum_charge / 2)
+          _ -> sum_charge
         end
-      )
 
-      start_decayer(cell)
+
+        # put back decayed charge
+        Agent.get_and_update(
+          cell,
+          fn(state) ->
+            charges = state.charges
+            {charges, charges ++ [decayed_charge]}
+          end
+        )
+
+        decay_and_relay(cell).()
+      end
     end
   end
 

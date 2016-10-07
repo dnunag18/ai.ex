@@ -6,10 +6,12 @@ defmodule AI.Cell.InhibitorGraded do
 
   defstruct [
     subscribers: [],
-    threshold: 0.0
+    threshold: 0.0,
+    name: "-"
   ]
 
   def handle_event({:stimulate, transmitter}, state) do
+    # IO.puts "#{inspect state.name} - #{transmitter}"
     {:ok, state}
   end
 
@@ -22,22 +24,27 @@ defmodule AI.Cell.InhibitorGraded do
     {:ok, state.subscribers, state}
   end
 
-  def start_link do
+  def handle_call({:name, name}, state) do
+    {:ok, name, Map.put(state, :name, name)}
+  end
+
+  def start_link(name) do
     state = %__MODULE__{}
     {:ok, pid} = GenEvent.start_link
     :ok = GenEvent.add_handler(pid, __MODULE__, state)
+    GenEvent.call(pid, __MODULE__, {:name, name})
     task = start_processor(pid)
-    
+
     {pid, task}
   end
-  
+
   defp start_processor(pid) do
     {:ok, task} = Task.start_link(fn ->
       GenEvent.stream(pid)
       |> Stream.transform(%{charges: []}, fn({:stimulate, transmitter}, acc) ->
         now = :os.timestamp
         acc = accumulate_charges(transmitter, acc, now)
-        
+
         charge = calculate_charge(acc.charges, now)
 
         {[charge], acc}
@@ -46,7 +53,7 @@ defmodule AI.Cell.InhibitorGraded do
     end)
     task
   end
-  
+
   defp accumulate_charges(transmitter, acc, now) do
     # add transmitter to the charges
     acc = case Enum.count(acc.charges) do
@@ -57,7 +64,7 @@ defmodule AI.Cell.InhibitorGraded do
     end
     Map.put(acc, :charges, acc.charges ++ [{transmitter, now}])
   end
-  
+
   defp calculate_charge(charges, now) do
     Enum.reduce(charges, 0, fn(el, sum) ->
       {t, ts} = el
@@ -71,12 +78,13 @@ defmodule AI.Cell.InhibitorGraded do
       Enum.max([Enum.min([sum + val, 10]), -10])
     end)
   end
-  
+
   defp relay(charge, pid) do
-    if charge > 0 do
-      subscribers = GenEvent.call(pid, __MODULE__, :subscribers)
-      num_subscribers = Enum.count(subscribers)
-      Enum.each(subscribers, &GenEvent.notify(&1, {:stimulate, -charge / num_subscribers}))
+    subscribers = GenEvent.call(pid, __MODULE__, :subscribers)
+    num_subscribers = Enum.count(subscribers)
+    charge = Float.floor(charge / num_subscribers)
+    if charge != 0 do
+      Enum.each(subscribers, &GenEvent.notify(&1, {:stimulate, -charge}))
     end
   end
 end

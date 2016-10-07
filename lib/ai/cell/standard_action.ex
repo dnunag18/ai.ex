@@ -6,10 +6,12 @@ defmodule AI.Cell.StandardAction do
 
   defstruct [
     subscribers: [],
-    threshold: 5
+    threshold: 5,
+    name: "-"
   ]
 
   def handle_event({:stimulate, transmitter}, state) do
+    # IO.puts "#{inspect state.name} - #{transmitter}"
     {:ok, state}
   end
 
@@ -21,20 +23,25 @@ defmodule AI.Cell.StandardAction do
     state = Map.put(state, :subscribers, [subscriber|state.subscribers])
     {:ok, state.subscribers, state}
   end
-  
+
   def handle_call(:threshold, state) do
     {:ok, state.threshold, state}
   end
 
-  def start_link do
+  def handle_call({:name, name}, state) do
+    {:ok, name, Map.put(state, :name, name)}
+  end
+
+  def start_link(name) do
     state = %__MODULE__{}
     {:ok, pid} = GenEvent.start_link
     :ok = GenEvent.add_handler(pid, __MODULE__, state)
+    GenEvent.call(pid, __MODULE__, {:name, name})
     task = start_processor(pid)
-    
+
     {pid, task}
   end
-  
+
   defp start_processor(pid) do
     threshold = GenEvent.call(pid, __MODULE__, :threshold)
     {:ok, task} = Task.start_link(fn ->
@@ -42,7 +49,7 @@ defmodule AI.Cell.StandardAction do
       |> Stream.transform(%{charges: []}, fn({:stimulate, transmitter}, acc) ->
         now = :os.timestamp
         acc = accumulate_charges(transmitter, acc, now)
-        
+
         charge = calculate_charge(acc.charges, now)
 
         if charge > threshold do
@@ -55,7 +62,7 @@ defmodule AI.Cell.StandardAction do
     end)
     task
   end
-  
+
   defp accumulate_charges(transmitter, acc, now) do
     # add transmitter to the charges
     acc = case Enum.count(acc.charges) do
@@ -66,7 +73,7 @@ defmodule AI.Cell.StandardAction do
     end
     Map.put(acc, :charges, acc.charges ++ [{transmitter, now}])
   end
-  
+
   defp calculate_charge(charges, now) do
     Enum.reduce(charges, 0, fn(el, sum) ->
       {t, ts} = el
@@ -80,10 +87,10 @@ defmodule AI.Cell.StandardAction do
       Enum.max([Enum.min([sum + val, 10]), -10])
     end)
   end
-  
+
   defp relay(charge, pid) do
     subscribers = GenEvent.call(pid, __MODULE__, :subscribers)
     num_subscribers = Enum.count(subscribers)
-    Enum.each(subscribers, &GenEvent.notify(&1, {:stimulate, charge / num_subscribers}))
+    Enum.each(subscribers, &GenEvent.notify(&1, {:stimulate, Float.floor(charge / num_subscribers)}))
   end
 end
