@@ -20,27 +20,49 @@ defmodule AI.Behavior.CenterSurroundTest do
     IO.puts "finish #{inspect :os.timestamp}"
 
     Process.sleep(500)
-
   end
 
 
-  # test "on center, on surround - constant impulses", %{circuit: circuit} do
-  #   ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
-  #   {logger, _} = AI.Cell.Debug.Logger.start_link
-  #   GenEvent.call(ganglion, AI.Cell.StandardAction, {:add_subscriber, logger})
-  #
-  #   # test 10 inputs per second for 3 seconds
-  #   :timer.sleep(10)
-  #   IO.puts "start on on #{inspect :os.timestamp}"
-  #   Enum.each(1..30, fn(_) ->
-  #     Enum.each(circuit.inputs, fn(row) ->
-  #       Enum.each(row, &GenEvent.notify(&1, {:stimulate, 10}))
-  #     end)
-  #   end)
-  #   IO.puts "finish #{inspect :os.timestamp}"
-  #
-  #   Process.sleep(800)
-  #
-  # end
+  test "on center, on surround - constant impulses", %{circuit: circuit} do
+    ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
+    {logger, _} = AI.Cell.Debug.Logger.start_link
+    GenEvent.call(ganglion, AI.Cell.StandardAction, {:add_subscriber, logger})
+
+    # test 10 inputs per second for 3 seconds
+    :timer.sleep(10)
+    IO.puts "start on on #{inspect :os.timestamp}"
+    Enum.each(1..30, fn(_) ->
+      Enum.each(circuit.inputs, fn(row) ->
+        Enum.each(row, &GenEvent.notify(&1, {:stimulate, 10}))
+      end)
+    end)
+    IO.puts "finish #{inspect :os.timestamp}"
+
+    Process.sleep(900)
+  end
+
+  test "off center, on surround - constant impulses", %{circuit: circuit} do
+    ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
+    {logger, _} = AI.Cell.Debug.Logger.start_link
+    GenEvent.call(ganglion, AI.Cell.StandardAction, {:add_subscriber, logger})
+
+    # test 10 inputs per second for 3 seconds
+    :timer.sleep(10)
+    IO.puts "start off on #{inspect :os.timestamp}"
+    Enum.each(1..30, fn(_) ->
+      for i <- 0..2 do
+        for j <- 0..2 do
+          cone = circuit.inputs |> Enum.at(i) |> Enum.at(j)
+
+          if i != 1 && j != 1 do
+            GenEvent.notify(cone, {:stimulate, 10})
+          end
+        end
+      end
+    end)
+    IO.puts "finish #{inspect :os.timestamp}"
+
+    Process.sleep(800)
+  end
 
 end
