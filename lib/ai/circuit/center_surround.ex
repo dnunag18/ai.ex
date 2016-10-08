@@ -66,9 +66,6 @@ defmodule AI.Circuit.CenterSurround do
         cone = at(cones, i, j)
         case {i, j} do
           {1, 1} ->
-            IO.puts "-----------------------------------"
-            IO.puts "#{i} - #{j}"
-            IO.puts "adding subscriber #{inspect in_to_out}"
             GenEvent.call(cone, Cell, {:add_subscriber, in_to_out})
             GenEvent.call(out_to_in, Cell, {:add_subscriber, cone})
             GenEvent.call(cone, Cell, {:add_subscriber, bipolar})
