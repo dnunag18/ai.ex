@@ -1,100 +1,83 @@
 defmodule AI.Cell do
-  require Logger
   @moduledoc """
   """
+  use GenEvent
+  defstruct [
+    subscribers: [],
+    threshold: 0.0,
+    name: "-"
+  ]
 
-  @doc """
-  Stimulates cell with a charge.  For graded cells, charges are passed to subscribing cells
-  on a gradient scale, i.e., there is no action potential.
+  @callback relay(charge :: number, pid, name :: String.t) :: any
 
-  When `stimulate`-ing a cell, the accept, decay, publish task chain is initiated.
-  * The transmitter charge is added to the `input_charge` of the cell.
-  * The input charges are added to the `charge`
-  * The `charge` decays
-  * The cell publishes the charge to the subscribers
-  """
-  @spec stimulate(Agent.t, integer) :: {Keyword.t, term, term, term}
-  def stimulate(cell, transmitter) do
-    Agent.get_and_update(cell, fn(state) ->
-      charges = state.charge ++ transmitter
-      {charges, Map.put(cell, :charge, charges)}
+  def handle_event({:stimulate, transmitter}, state) do
+    {:ok, state}
+  end
+
+  def handle_call(:subscribers, state) do
+    {:ok, state.subscribers, state}
+  end
+
+  def handle_call(:threshold, state) do
+    {:ok, state.threshold, state}
+  end
+
+  def handle_call({:add_subscriber, subscriber}, state) do
+    state = Map.put(state, :subscribers, [subscriber|state.subscribers])
+    {:ok, state.subscribers, state}
+  end
+
+  def handle_call(:name, state) do
+    {:ok, state.name, state}
+  end
+
+  def start_link(module, state \\ %{}) do
+    state = Map.merge(%__MODULE__{}, state)
+    {:ok, pid} = GenEvent.start_link
+    :ok = GenEvent.add_handler(pid, __MODULE__, state)
+    task = start_processor(pid, module)
+
+    {pid, task}
+  end
+
+  defp start_processor(pid, module) do
+    name = GenEvent.call(pid, AI.Cell, :name)
+    {:ok, task} = Task.start_link(fn ->
+      GenEvent.stream(pid)
+      |> Stream.transform(%{charges: []}, fn({:stimulate, transmitter}, acc) ->
+        now = :os.timestamp
+        acc = accumulate_charges(transmitter, acc)
+
+        charge = calculate_charge(acc.charges, now)
+        {[charge], acc}
+      end)
+      |> Enum.each(&module.relay(&1, pid, name))
+    end)
+    task
+  end
+
+  def accumulate_charges(transmitter, acc) do
+    # add transmitter to the charges
+    acc = case Enum.count(acc.charges) do
+        5 ->
+            [_|t] = acc.charges
+            Map.put(acc, :charges, t)
+        _ -> acc
+    end
+    Map.put(acc, :charges, acc.charges ++ [transmitter])
+  end
+
+  def calculate_charge(charges, now) do
+    Enum.reduce(charges, 0, fn(el, sum) ->
+      {t, ts} = el
+      diff = :timer.now_diff(now, ts)
+      val = cond do
+        diff < 10 -> t
+        diff < 20 -> t / 2
+        diff < 30 -> t / 4
+        :true -> 0
+      end
+      charge = Enum.max([Enum.min([sum + val, 10]), -10])
     end)
   end
-
-  @spec subscribe(Agent.t, Agent.t) :: {:ok, Enum.t}
-  def subscribe(publisher, subscriber) do
-    subscribers = get(publisher, :subscribers) ++ [subscriber]
-    {put(publisher, :subscribers, subscribers), subscribers}
-  end
-
-  @doc """
-  Get cell's state for the specified key
-  """
-  @spec get(Agent.t, atom) :: term
-  def get(cell, key) do
-    Agent.get(cell, &Map.get(&1, key))
-  end
-
-  @doc """
-  Update cell's state for the specified key.  Use carefully
-  """
-  def put(cell, key, value) do
-    Agent.update(cell, &Map.put(&1, key, value))
-  end
-
-  defp start_decayer(cell) do
-    Task.start_nolink(decay_and_relay(cell))
-  end
-
-  defp decay_and_relay(cell) do
-    fn ->
-      # get charge
-      charges = Agent.get_and_update(cell, fn(state) ->
-        charges = state.charges ++ transmitter
-        {charges, []}
-      end)
-
-      # relay charge
-      threshold = get(cell, :threshold)
-      sum_charge = Enum.reduce(charges, &(&1 + &2))
-
-      if sum_charge >= threshold && sum_charge != 0.0 do
-        # get subscribers, and call stimulate on them
-        subscribers = get(cell, :subscribers)
-        Enum.each(
-          subscribers,
-          fn ->
-            Task.start(fn ->
-              stimulate(cell, sum_charge)
-            end)
-          end
-        )
-
-
-        # decay
-        decayed_charge = case {sum_charge > 0, sum_charge < 0} do
-          {:true, _} -> Float.floor(sum_charge / 2)
-          {_, :true} -> Float.ceil(sum_charge / 2)
-          _ -> sum_charge
-        end
-
-
-        # put back decayed charge
-        Agent.get_and_update(
-          cell,
-          fn(state) ->
-            charges = state.charges
-            {charges, charges ++ [decayed_charge]}
-          end
-        )
-
-        decay_and_relay(cell).()
-      end
-    end
-  end
-
-  @doc """
-  Publishes a charge to the subscribing cells.  This is called in the publish phase of the accept, decay, publish task chain
-  """
-  @callback impulse(cell :: Agent.t, charge :: Float.t, subscribers :: List.t) :: term
 end

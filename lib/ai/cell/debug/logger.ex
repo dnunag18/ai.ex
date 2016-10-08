@@ -27,14 +27,14 @@ defmodule AI.Cell.Debug.Logger do
     {:ok, pid} = GenEvent.start_link
     :ok = GenEvent.add_handler(pid, __MODULE__, state)
     task = start_processor(pid)
-    
+
     {pid, task}
   end
-  
+
   defp start_processor(pid) do
     {:ok, task} = Task.start_link(fn ->
       stream = Stream.with_index(GenEvent.stream(pid))
-      
+
       for {el, i} <- stream do
         IO.puts "#{i} #{inspect :os.timestamp} #{inspect el}"
       end

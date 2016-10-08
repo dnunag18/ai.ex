@@ -45,33 +45,36 @@ defmodule AI.Circuit.CenterSurround do
 
   def create do
     # cells
-    {ganglion, _} = Cell.StandardAction.start_link("ganglion")
-    {bipolar, _} = Cell.StandardGraded.start_link("bipolar")
+    {ganglion, _} = Cell.start_link(Cell.StandardAction, %{name: "ganglion", threshold: 1})
+    {bipolar, _} = Cell.start_link(Cell.StandardGraded, %{name: "bipolar"})
 
-    {in_to_out, _} = Cell.InhibitorGraded.start_link("in_to_out")
-    {out_to_in, _} = Cell.InhibitorGraded.start_link("out_to_in")
+    {in_to_out, _} = Cell.start_link(Cell.InhibitorGraded, %{name: "in_to_out"})
+    {out_to_in, _} = Cell.start_link(Cell.InhibitorGraded, %{name: "out_to_in"})
 
     cones = for i <- 0..2 do
       for j <- 0..2 do
-        {cone, _} = Cell.StandardGraded.start_link("cone #{i}-#{j}")
+        {cone, _} = Cell.start_link(Cell.StandardGraded, %{name: "cone #{i}-#{j}"})
         cone
       end
     end
 
     # connections
-    GenEvent.call(bipolar, Cell.StandardGraded, {:add_subscriber, ganglion})
+    GenEvent.call(bipolar, Cell, {:add_subscriber, ganglion})
 
     for i <- 0..2 do
       for j <- 0..2 do
         cone = at(cones, i, j)
         case {i, j} do
           {1, 1} ->
-            GenEvent.call(cone, Cell.StandardGraded, {:add_subscriber, in_to_out})
-            GenEvent.call(out_to_in, Cell.InhibitorGraded, {:add_subscriber, cone})
-            GenEvent.call(cone, Cell.StandardGraded, {:add_subscriber, bipolar})
+            IO.puts "-----------------------------------"
+            IO.puts "#{i} - #{j}"
+            IO.puts "adding subscriber #{inspect in_to_out}"
+            GenEvent.call(cone, Cell, {:add_subscriber, in_to_out})
+            GenEvent.call(out_to_in, Cell, {:add_subscriber, cone})
+            GenEvent.call(cone, Cell, {:add_subscriber, bipolar})
           {_, _} ->
-            GenEvent.call(cone, Cell.StandardGraded, {:add_subscriber, out_to_in})
-            GenEvent.call(in_to_out, Cell.InhibitorGraded, {:add_subscriber, cone})
+            GenEvent.call(cone, Cell, {:add_subscriber, out_to_in})
+            GenEvent.call(in_to_out, Cell, {:add_subscriber, cone})
         end
       end
     end
