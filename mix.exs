@@ -15,7 +15,7 @@ defmodule AI.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [
-      applications: [:logger],
+      applications: [:logger, :cowboy, :ranch],
       #mod: {Experiment, []}
       mod: {AI, []}
     ]
@@ -31,6 +31,10 @@ defmodule AI.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:ex_doc, "~> 0.12", only: :dev}]
+    [
+      { :cowboy, github: "ninenines/cowboy", tag: "2.0.0-pre.3" },
+      {:ex_doc, "~> 0.12", only: :dev},
+      {:jiffy, "~> 0.14.7"}
+    ]
   end
 end
