@@ -20,9 +20,11 @@ defmodule AI.Nucleus.Retina do
         Enum.reduce(row, [], fn(cs, fields) ->
           bind(
             fields,
-            wrap_elems(cs.inputs)
+            wrap_elems(cs.inputs),
+            2
           )
-        end)
+        end),
+        2
       )
     end)
     outputs = Enum.map(cs_matrix, fn(row) ->
@@ -40,7 +42,7 @@ defmodule AI.Nucleus.Retina do
     }
   end
 
-  def bind(left, right) do
+  def bind(left, right, overlap \\ 0) do
     height = Enum.count(left)
     if height == 0 do
       right
@@ -57,9 +59,9 @@ defmodule AI.Nucleus.Retina do
 
           el = matrix |> Enum.at(i) |> Enum.at(rem(j, left_width))
 
-          if j == left_width do
-            [prev|acc] = acc
-            [prev ++ el | acc]
+          if left_width <= j && j - left_width < overlap do
+            [prev|tail] = Enum.take(acc, overlap - j - 1)
+            Enum.take(acc, left_width - j + overlap - 1) ++ [prev ++ el | tail]
           else
             [el|acc]
           end
@@ -68,7 +70,7 @@ defmodule AI.Nucleus.Retina do
     end
   end
 
-  def stack(top, bottom) do
+  def stack(top, bottom, overlap \\ 0) do
     top_height = Enum.count(top)
     if top_height == 0 do
       bottom
@@ -84,9 +86,9 @@ defmodule AI.Nucleus.Retina do
 
         row = matrix |> Enum.at(rem(i, top_height))
 
-        if i == top_height do
-          [prev|acc] = acc
-          [
+        if top_height <= i && i - top_height < overlap do
+          [prev|tail] = Enum.take(acc, overlap - i - 1)
+          Enum.take(acc, top_height - i + overlap - 1) ++ [
             Enum.map(
               Enum.zip(
                 prev,
@@ -94,7 +96,7 @@ defmodule AI.Nucleus.Retina do
               ),
               &Tuple.to_list(&1)
             ) |> Enum.map(fn([x, y]) -> x ++ y end)
-            |acc
+            |tail
           ]
         else
           [row|acc]

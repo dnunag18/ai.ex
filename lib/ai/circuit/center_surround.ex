@@ -49,7 +49,7 @@ defmodule AI.Circuit.CenterSurround do
     {:ok, bipolar} = Cell.start(%{name: "bipolar", module: Cell.StandardGraded})
 
     {:ok, in_to_out} = Cell.start(%{name: "in_to_out", module: Cell.InhibitorGraded})
-    {:ok, out_to_in} = Cell.start(%{name: "out_to_in", module: Cell.InhibitorGraded})
+    {:ok, out_to_in} = Cell.start(%{name: "out_to_in", threshold: 4.6, module: Cell.InhibitorGraded})
 
     cones = for i <- 0..2 do
       for j <- 0..2 do

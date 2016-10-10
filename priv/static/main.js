@@ -12,7 +12,6 @@ const inputCanvas = document.querySelector('#input');
 const inputContext = inputCanvas.getContext('2d');
 const outputCanvas = document.querySelector('#output');
 const outputContext = outputCanvas.getContext('2d');
-outputContext.fillStyle = "rgba(0,0,0,255)";
 inputContext.fillStyle = "rgba(0,0,0,255)";
 
 let drawing = false;
@@ -46,8 +45,14 @@ document.querySelector('button').addEventListener('click', () => {
 
 const ws = new WebSocket('ws://localhost:15080/websocket');
 
-let charge = 5;
-let threshold = 1;
+let charge = 3.8;
+// let threshold = 85;
+const colorPixel = (x, y, hit) => {
+  let alpha = 255;
+  alpha = alpha * hit / 100;
+  outputContext.fillStyle = "rgba(0,0,0,"+alpha+")";
+  outputContext.fillRect(x, y, 10, 10);
+};
 const hits = {};
 ws.onmessage = (message) => {
   const m = JSON.parse(message.data);
@@ -56,11 +61,11 @@ ws.onmessage = (message) => {
   const key = x + '-' + y;
   let hit = hits[key];
   hits[key] = hits[key] || 0;
-  hit = hits[key] = Math.min(10, ++hits[key]);
-  if (hit > threshold) {
-    // console.log('key', key, hit);
-    outputContext.fillRect(x, y, 10, 10);
-  }
+  hit = hits[key] = Math.min(100, ++hits[key]);
+  let alpha = 255;
+  alpha = alpha * hit / 100;
+  outputContext.fillStyle = "rgba(0,0,0,"+alpha+")";
+  outputContext.fillRect(x, y, 10, 10);
 };
 let interval = setInterval(() => {
   const height = inputCanvas.height;
@@ -96,17 +101,12 @@ ws.onclose = () => clearInterval(interval);
 
 setInterval(() => {
   Object.keys(hits).forEach(key => {
-    const hit = hits[key];
-    if (hit > 0) {
-      hits[key]--;
-      const coords =  key.split('-');
-      const x = coords[0];
-      const y = coords[1];
-      // console.log('key', key, hit);
-      if (hit - 1 < threshold) {
-        outputContext.clearRect(x, y, 10, 10);
-      }
-    }
+    let hit = hits[key];
+    hit = hits[key]--;
+    const coords =  key.split('-');
+    const x = coords[0];
+    const y = coords[1];
+    colorPixel(x, y, hit);
   });
 }, 100);
 // }, false);

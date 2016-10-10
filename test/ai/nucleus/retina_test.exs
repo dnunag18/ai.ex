@@ -9,13 +9,29 @@ defmodule AI.Nucleus.RetinaTest do
       [[1], [2], [3, 6]]
     ]
     b = [
-      [[3], [2], [1]],
-      [[3], [2], [1]]
+      [["a"], ["b"], ["c"]],
+      [["a"], ["b"], ["c"]]
     ]
 
-    assert AI.Nucleus.Retina.bind(a, b) == [
-      [[1], [2], [3, 3], [2], [1]],
-      [[1], [2], [3, 6, 3], [2], [1]]
+    assert AI.Nucleus.Retina.bind(a, b, 1) == [
+      [[1], [2], [3, "a"], ["b"], ["c"]],
+      [[1], [2], [3, 6, "a"], ["b"], ["c"]]
+    ]
+  end
+
+  test "binding (left -> right) overlap 2" do
+    a = [
+      [[1], [2], [3]],
+      [[1], [2], [3, 6]]
+    ]
+    b = [
+      [["a"], ["b"], ["c"]],
+      [["a"], ["b"], ["c"]]
+    ]
+
+    assert AI.Nucleus.Retina.bind(a, b, 2) == [
+      [[1], [2, "a"], [3, "b"], ["c"]],
+      [[1], [2, "a"], [3, 6, "b"], ["c"]]
     ]
   end
 
@@ -29,7 +45,7 @@ defmodule AI.Nucleus.RetinaTest do
       [[3], [2], [1]]
     ]
 
-    assert AI.Nucleus.Retina.stack(a, b) == [
+    assert AI.Nucleus.Retina.stack(a, b, 1) == [
       [[1], [2], [3]],
       [[1,3], [2,2], [3,1]],
       [[3], [2], [1]]
@@ -43,7 +59,7 @@ defmodule AI.Nucleus.RetinaTest do
       [[3], [2], [1]]
     ]
 
-    assert AI.Nucleus.Retina.stack(a, b) == b
+    assert AI.Nucleus.Retina.stack(a, b, 1) == b
   end
 
   test "complex stacking no top ([] -> bottom)" do
@@ -59,7 +75,7 @@ defmodule AI.Nucleus.RetinaTest do
       [[3], [2], [1]],
       [[3], [2], [1]]
     ]
-    assert AI.Nucleus.Retina.stack(a, b) == [
+    assert AI.Nucleus.Retina.stack(a, b, 1) == [
       [[1], [2], [3]],
       [[1,3], [2,2], [3,1]],
       [[1], [2], [3]],
@@ -67,6 +83,21 @@ defmodule AI.Nucleus.RetinaTest do
       [[3], [2], [1]],
       [[3, 3], [2, 2], [1, 1]],
       [[3], [2], [1]]
+    ]
+  end
+
+  test "complex stacking no top overlap 2" do
+    a = [
+      [[30], [20], [10]],
+      [[300], [200], [100]]
+    ]
+    b = [
+      [[3], [2], [1]],
+      [[13], [12], [11]]
+    ]
+    assert AI.Nucleus.Retina.stack(a, b, 2) == [
+      [[30, 3], [20, 2], [10, 1]],
+      [[300, 13], [200, 12], [100, 11]]
     ]
   end
 
@@ -79,7 +110,7 @@ defmodule AI.Nucleus.RetinaTest do
       [[3], [2], [1]],
       [[3], [2], [1]]
     ]
-    assert AI.Nucleus.Retina.bind(a, b) == [
+    assert AI.Nucleus.Retina.bind(a, b, 1) == [
       [[1], [2], [3, 3], [2], [1, 3], [2], [1] ],
       [[1], [2], [3, 6, 3], [2], [1, 3], [2], [1] ]
     ]
