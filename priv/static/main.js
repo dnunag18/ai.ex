@@ -46,7 +46,7 @@ document.querySelector('button').addEventListener('click', () => {
 
 const ws = new WebSocket('ws://localhost:15080/websocket');
 
-let charge = 4;
+let charge = 10;
 const clears = {};
 ws.onmessage = (message) => {
   const m = JSON.parse(message.data);
@@ -58,7 +58,7 @@ ws.onmessage = (message) => {
   if (!clear) {
     clear = clears[key] = _.debounce(() => {
       outputContext.clearRect(x, y, 10, 10);
-    }, 1000);
+    }, 2000);
   }
   clear();
 };
@@ -72,7 +72,7 @@ let interval = setInterval(() => {
     height
   ).data;
   const length = width * height;
-  const inputs = [];
+  let inputs = [];
   for(let i = 0; i < length; i++) {
     if (data[(i * 4 + 3)] > 230) {
       inputs.push([
@@ -85,6 +85,7 @@ let interval = setInterval(() => {
 
   // websocket call
   if (inputs.length) {
+    inputs = _.shuffle(inputs);
     try {
       ws.send(JSON.stringify(inputs))
     } catch (e) {
@@ -94,6 +95,6 @@ let interval = setInterval(() => {
   }
   //console.log('inputs', inputs);
 
-}, 200);
+}, 50);
 
 // }, false);

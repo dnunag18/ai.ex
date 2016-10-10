@@ -10,8 +10,8 @@ defmodule AI.Cell do
 
   @callback relay(charge :: number, pid, name :: String.t) :: any
 
-  def handle_event({:stimulate, transmitter}, state) do
-    # IO.puts "#{state.name} - #{inspect transmitter}"
+  def handle_event({:stimulate, {charge, _}}, state) do
+    # IO.puts "#{state.name} - #{inspect charge}"
     {:ok, state}
   end
 
@@ -74,9 +74,9 @@ defmodule AI.Cell do
       diff = :timer.now_diff(now, ts)
       # IO.puts "calc with #{diff}"
       val = cond do
-        diff < 400 -> t
-        diff < 800 -> t / 2
-        diff < 1200 -> t / 4
+        diff < 10 -> t
+        diff < 20 -> t / 2
+        diff < 30 -> t / 4
         :true -> 0
       end
 
