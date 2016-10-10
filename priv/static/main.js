@@ -48,8 +48,8 @@ const ws = new WebSocket('ws://localhost:15080/websocket');
 let charge = 3.8;
 // let threshold = 85;
 const colorPixel = (x, y, hit) => {
-  let alpha = 255;
-  alpha = alpha * hit / 100;
+  let alpha = hit / 10;
+  outputContext.clearRect(x, y, 10, 10);
   outputContext.fillStyle = "rgba(0,0,0,"+alpha+")";
   outputContext.fillRect(x, y, 10, 10);
 };
@@ -62,10 +62,7 @@ ws.onmessage = (message) => {
   let hit = hits[key];
   hits[key] = hits[key] || 0;
   hit = hits[key] = Math.min(100, ++hits[key]);
-  let alpha = 255;
-  alpha = alpha * hit / 100;
-  outputContext.fillStyle = "rgba(0,0,0,"+alpha+")";
-  outputContext.fillRect(x, y, 10, 10);
+  colorPixel(x, y, hit);
 };
 let interval = setInterval(() => {
   const height = inputCanvas.height;
@@ -102,11 +99,13 @@ ws.onclose = () => clearInterval(interval);
 setInterval(() => {
   Object.keys(hits).forEach(key => {
     let hit = hits[key];
-    hit = hits[key]--;
-    const coords =  key.split('-');
-    const x = coords[0];
-    const y = coords[1];
-    colorPixel(x, y, hit);
+    if (hit > 0) {
+      hit = hits[key] = hits[key] - 1;
+      const coords =  key.split('-');
+      const x = coords[0];
+      const y = coords[1];
+      colorPixel(x, y, hit);
+    }
   });
-}, 100);
+}, 10);
 // }, false);
