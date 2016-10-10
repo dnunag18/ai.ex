@@ -3,12 +3,13 @@ defmodule WebsocketHandler do
   import Logger
 
   def init(req, _) do
-    retina = AI.Nucleus.Retina.create
+    {:ok, retina} = AI.Nucleus.Retina.create
+
     for i <- 0..(Enum.count(retina.outputs) - 1) do
       row = retina.outputs |> Enum.at(i)
       for j <- 0..(Enum.count(row) - 1) do
         ganglion = row |> Enum.at(j)
-        monitor = AI.Cell.Monitor.start_link(%{x: i, y: j, monitor: self})
+        monitor = AI.Cell.Monitor.start(%{x: i, y: j, monitor: self})
         GenEvent.call(ganglion, AI.Cell, {:add_subscriber, monitor})
       end
     end
@@ -31,11 +32,9 @@ defmodule WebsocketHandler do
   end
 
   # fallback message handler
-  def websocket_info(info, req, state) do
-    IO.puts "doing some info"
-    IO.puts "info #{inspect info}"
-    IO.puts "info #{inspect req}"
-    {:ok, req, state}
+  def websocket_info({x, y, charge}, req, state) do
+    encoded = :jiffy.encode([x, y, charge])
+    {:reply, {:text, encoded}, req, state}
   end
 
 

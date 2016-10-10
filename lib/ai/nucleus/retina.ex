@@ -25,16 +25,17 @@ defmodule AI.Nucleus.Retina do
         end)
       )
     end)
+    outputs = Enum.map(cs_matrix, fn(row) ->
+      Enum.map(row, fn(c) ->
+        c.outputs |> Enum.at(0) |> Enum.at(0)
+      end)
+    end)
 
     {
       :ok,
       %__MODULE__{
         inputs: inputs,
-        outputs: Enum.map(cs_matrix, fn(row) ->
-          Enum.map(row, fn(c) ->
-            c.outputs |> Enum.at(0) |> Enum.at(0)
-          end)
-        end)
+        outputs: outputs
       }
     }
   end

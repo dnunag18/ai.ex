@@ -1,10 +1,24 @@
 <html>
   <head>
     <title>AI - Vision!</title>
+    <link href="/static/main.css" rel="stylesheet" />
+    <script type="text/javascript" src="http://underscorejs.org/underscore-min.js"></script>
   </head>
   <body>
-    <div id="main">
-      Hello!
+    <div class="container">
+      <h1>Input</h1>
+      <canvas height="21" width="21" id="input">
+        Application not supported
+      </canvas>
+      <br>
+      <button type="button">Clear</button>
+
     </div>
+
+    <div class="container">
+      <h1>Output</h1>
+      <canvas height="100" width="100" id="output"></canvas>
+    </div>
+    <script type="text/javascript" src="/static/main.js" ></script>
   </body>
 </html>

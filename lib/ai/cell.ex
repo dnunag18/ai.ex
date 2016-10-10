@@ -11,6 +11,7 @@ defmodule AI.Cell do
   @callback relay(charge :: number, pid, name :: String.t) :: any
 
   def handle_event({:stimulate, transmitter}, state) do
+    # IO.puts "#{state.name} - #{inspect transmitter}"
     {:ok, state}
   end
 
@@ -33,7 +34,7 @@ defmodule AI.Cell do
 
   def start_link(module, state \\ %{}) do
     state = Map.merge(%__MODULE__{}, state)
-    {:ok, pid} = GenEvent.start_link
+    {:ok, pid} = GenEvent.start
     :ok = GenEvent.add_handler(pid, __MODULE__, state)
     task = start_processor(pid, module)
 
@@ -42,13 +43,13 @@ defmodule AI.Cell do
 
   defp start_processor(pid, module) do
     name = GenEvent.call(pid, AI.Cell, :name)
-    {:ok, task} = Task.start_link(fn ->
+    {:ok, task} = Task.start(fn ->
       GenEvent.stream(pid)
       |> Stream.transform(%{charges: []}, fn({:stimulate, transmitter}, acc) ->
         now = :os.timestamp
         acc = accumulate_charges(transmitter, acc)
-
         charge = calculate_charge(acc.charges, now)
+        # IO.puts "#{name}-processing-#{inspect charge}"
         {[charge], acc}
       end)
       |> Enum.each(&module.relay(&1, pid, name))
@@ -71,12 +72,14 @@ defmodule AI.Cell do
     Enum.reduce(charges, 0, fn(el, sum) ->
       {t, ts} = el
       diff = :timer.now_diff(now, ts)
+      # IO.puts "calc with #{diff}"
       val = cond do
-        diff < 10 -> t
-        diff < 20 -> t / 2
-        diff < 30 -> t / 4
+        diff < 400 -> t
+        diff < 800 -> t / 2
+        diff < 1200 -> t / 4
         :true -> 0
       end
+
       charge = Enum.max([Enum.min([sum + val, 10]), -10])
     end)
   end

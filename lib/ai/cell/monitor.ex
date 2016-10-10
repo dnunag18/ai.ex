@@ -9,8 +9,8 @@ defmodule AI.Cell.Monitor do
     {:ok, state}
   end
 
-  def start_link(state \\ %{x: nil, y: nil, monitor: nil}) do
-    {:ok, pid} = GenEvent.start_link
+  def start(state \\ %{x: nil, y: nil, monitor: nil}) do
+    {:ok, pid} = GenEvent.start
     :ok = GenEvent.add_handler(pid, __MODULE__, state)
     pid
   end

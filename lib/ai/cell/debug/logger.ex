@@ -24,7 +24,7 @@ defmodule AI.Cell.Debug.Logger do
 
   def start_link do
     state = %__MODULE__{}
-    {:ok, pid} = GenEvent.start_link
+    {:ok, pid} = GenEvent.start
     :ok = GenEvent.add_handler(pid, __MODULE__, state)
     task = start_processor(pid)
 

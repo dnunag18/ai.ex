@@ -85,7 +85,7 @@ defmodule AI do
           #   :cowboy_elixir_example -- application name.  This is used to search for
           #                             the path that priv/ exists in.
           #   "static_files"         -- directory to look for files in
-          {"/static/[...]", :cowboy_static, {:priv_dir,  :ai, "static_files"}},
+          {"/static/[...]", :cowboy_static, {:priv_dir,  :ai, "static"}},
 
           # Serve websocket requests.
           {"/websocket", WebsocketHandler, %{}}
