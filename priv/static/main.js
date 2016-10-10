@@ -1,15 +1,15 @@
 
 
-// draw input canvas
-// allow click drawing?
+let charge = 6.7; // charge value from a dot.
+const multiplier = 10; // how much to enlarge input canvas ()
+const ws = new WebSocket(`ws://${location.host}/websocket`);
+const util = {now: Date.now() }; // object to hopefully save time on generating current time
+let max = 1; // max impulses per time frame.  this will be updated at runtime, and it determines the opacity of output points
+const TIME_FRAME = 50; // length of timeframe in ms to calculate ganglion firing rate
 
-// draw output canvas
-// websocket handler.  clear out pixel after 500ms?
-
-
+// canvas setup
 const inputCanvas = document.querySelector('#input');
 const inputContext = inputCanvas.getContext('2d');
-const multiplier = 10;
 const shadowCanvas = document.createElement('canvas');
 shadowCanvas.height = inputCanvas.height / multiplier;
 shadowCanvas.width = inputCanvas.width / multiplier;
@@ -19,7 +19,6 @@ const outputContext = outputCanvas.getContext('2d');
 inputContext.fillStyle = "rgba(0,0,0,255)";
 
 let drawing = false;
-//
 const listener = e => {
   const shadowX = Math.floor(e.layerX / multiplier);
   const shadowY = Math.floor(e.layerY / multiplier);
@@ -51,28 +50,31 @@ document.querySelector('button').addEventListener('click', () => {
   shadowContext.clearRect(0, 0, shadowCanvas.width, shadowCanvas.height);
 }, false);
 
-const ws = new WebSocket(`ws://${location.host}/websocket`);
 
-let charge = 4;
-// let threshold = 85;
 const colorPixel = (x, y, hit) => {
-  let alpha = hit / 10;
+  let alpha = hit / max;
   outputContext.clearRect(x, y, 10, 10);
   outputContext.fillStyle = `rgba(0,0,0,${alpha})`;
   outputContext.fillRect(x, y, 10, 10);
 };
+
+// stores the hits (impulses) for a given ganglion
 const hits = {};
+
+// update impulse count and draw output on incoming messages
 ws.onmessage = (message) => {
   const m = JSON.parse(message.data);
   const x = m[1] * 10;
   const y = m[0] * 10;
   const key = x + '-' + y;
   let hit = hits[key];
-  hits[key] = hits[key] || {val: 0, time: util.now};
-  hit = hits[key] = {val: Math.min(10, ++hits[key].val), time: util.now};
-  colorPixel(x, y, hit.val);
+  hits[key] = hits[key] || [];
+  hit = hits[key] = hits[key].concat([util.now]);
+  colorPixel(x, y, hit.length);
 };
-let interval = setInterval(() => {
+
+// continuously send input info to server
+const interval = setInterval(() => {
   util.now = Date.now();
   const height = shadowCanvas.height;
   const width = shadowCanvas.width;
@@ -99,21 +101,20 @@ let interval = setInterval(() => {
   }
 }, 10);
 
+// ws cleanup
 ws.onclose = () => clearInterval(interval);
-const util = {now: Date.now() };
+
+// calculate ganglion firing rate
 setInterval(() => {
   Object.keys(hits).forEach(key => {
     let hit = hits[key];
-    if (util.now - hit.time > 150) {
-      hit = hits[key] = {val: 0, time: util.now};
-      const coords =  key.split('-');
-      const x = coords[0];
-      const y = coords[1];
-      colorPixel(x, y, hit.val);
+    if (hit.length > max) {
+      max = hit.length;
     }
+    hit = hits[key] = hit.filter(time => util.now - time < TIME_FRAME + 1);
+    const coords =  key.split('-');
+    const x = coords[0];
+    const y = coords[1];
+    colorPixel(x, y, hit.length);
   });
-}, 100);
-
-setInterval(() => {
-  console.log(JSON.stringify(hits, '', '  '));
-}, 5000);
+}, TIME_FRAME);
