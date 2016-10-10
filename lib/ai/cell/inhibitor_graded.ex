@@ -8,8 +8,9 @@ defmodule AI.Cell.InhibitorGraded do
   def relay(charge, state) do
     subscribers = state.subscribers
     num_subscribers = Enum.count(subscribers)
-    # IO.puts "#{name} - #{charge} - #{num_subscribers}"
-    if charge > 0 do
+    # IO.puts "#{state.name} - #{charge} thresh: #{state.threshold}"
+    if charge > state.threshold do
+      # IO.puts "#{state.name} - #{charge} thresh: #{state.threshold}"
       charge = Float.floor(charge / num_subscribers)
       Enum.each(subscribers, &GenEvent.notify(&1, {:stimulate, {-charge, :os.timestamp}}))
     end

@@ -45,7 +45,7 @@ defmodule AI.Circuit.CenterSurround do
 
   def create do
     # cells
-    {:ok, ganglion} = Cell.start(%{name: "ganglion", threshold: 8, module: Cell.StandardAction})
+    {:ok, ganglion} = Cell.start(%{name: "ganglion", threshold: 1, module: Cell.StandardAction})
     {:ok, bipolar} = Cell.start(%{name: "bipolar", module: Cell.StandardGraded})
 
     {:ok, in_to_out} = Cell.start(%{name: "in_to_out", module: Cell.InhibitorGraded})

@@ -9,7 +9,7 @@ defmodule AI.Cell.StandardGraded do
     charge = Float.floor(charge / num_subscribers)
     # IO.puts "#{name} - #{charge}"
     # IO.puts "#{state.name} - #{charge} to - #{inspect state.subscribers}"
-    if charge > 0 do
+    if charge > state.threshold do
       Enum.each(state.subscribers, &GenEvent.notify(&1, {:stimulate, {charge, :os.timestamp}}))
     end
   end

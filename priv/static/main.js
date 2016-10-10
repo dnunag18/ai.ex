@@ -47,7 +47,7 @@ document.querySelector('button').addEventListener('click', () => {
 const ws = new WebSocket('ws://localhost:15080/websocket');
 
 let charge = 5;
-let threshold = 3;
+let threshold = 1;
 const hits = {};
 ws.onmessage = (message) => {
   const m = JSON.parse(message.data);
@@ -55,17 +55,10 @@ ws.onmessage = (message) => {
   const y = m[0] * 10;
   const key = x + '-' + y;
   let hit = hits[key];
-  if (!hit) {
-    hits[key] = hits[key] || 0;
-    hit = ++hits[key];
-    setTimout(() => {
-      hit = hits[key]--;
-      if (hit < threshold) {
-        outputContext.clearRect(x, y, 10, 10);
-      }
-    }, 100);
-  }
+  hits[key] = hits[key] || 0;
+  hit = hits[key] = Math.min(10, ++hits[key]);
   if (hit > threshold) {
+    // console.log('key', key, hit);
     outputContext.fillRect(x, y, 10, 10);
   }
 };
@@ -93,15 +86,27 @@ let interval = setInterval(() => {
   // websocket call
   if (inputs.length) {
     inputs = _.shuffle(inputs);
-    try {
-      ws.send(JSON.stringify(inputs))
-    } catch (e) {
-      console.error(e);
-      clearInterval(interval);
-    }
+    ws.send(JSON.stringify(inputs));
   }
   //console.log('inputs', inputs);
 
-}, 50);
+}, 10);
 
+ws.onclose = () => clearInterval(interval);
+
+setInterval(() => {
+  Object.keys(hits).forEach(key => {
+    const hit = hits[key];
+    if (hit > 0) {
+      hits[key]--;
+      const coords =  key.split('-');
+      const x = coords[0];
+      const y = coords[1];
+      // console.log('key', key, hit);
+      if (hit - 1 < threshold) {
+        outputContext.clearRect(x, y, 10, 10);
+      }
+    }
+  });
+}, 100);
 // }, false);

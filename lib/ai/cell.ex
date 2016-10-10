@@ -7,14 +7,17 @@ defmodule AI.Cell do
     threshold: 0.0,
     charges: [],
     module: nil,
+    publishers: 0,
     name: "-"
   ]
 
   @callback relay(charge :: number, pid, name :: String.t) :: any
 
   def handle_event({:stimulate, {charge, ts} = transmitter}, state) do
-    # IO.puts "#{state.name} - #{inspect charge}"
-    state = accumulate_charges(transmitter, state)
+    # if state.name == "ganglion" do
+    #   IO.puts "#{state.name} - #{inspect charge}"
+    # end
+    state = accumulate_charges({charge/Enum.max([1,state.publishers]), ts}, state)
     charge = calculate_charge(state.charges, ts)
     state.module.relay(charge, state)
     {:ok, state}
@@ -30,7 +33,13 @@ defmodule AI.Cell do
 
   def handle_call({:add_subscriber, subscriber}, state) do
     state = Map.put(state, :subscribers, [subscriber|state.subscribers])
+    GenEvent.call(subscriber, AI.Cell, :publisher)
     {:ok, state.subscribers, state}
+  end
+
+  def handle_call(:publisher, state) do
+    state = Map.put(state, :publishers, state.publishers + 1)
+    {:ok, state.publishers, state}
   end
 
   def handle_call(:name, state) do
@@ -68,7 +77,7 @@ defmodule AI.Cell do
         :true -> 0
       end
       # IO.puts "diff #{diff}"
-      Enum.max([Enum.min([sum + val, 10]), -10])
+      Enum.max([Enum.min([sum + val, 60]), -60])
     end)
   end
 end
