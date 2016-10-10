@@ -7,27 +7,34 @@
 // websocket handler.  clear out pixel after 500ms?
 
 
-// window.addEventListener('load', () => {
 const inputCanvas = document.querySelector('#input');
 const inputContext = inputCanvas.getContext('2d');
+const multiplier = 10;
+const shadowCanvas = document.createElement('canvas');
+shadowCanvas.height = inputCanvas.height / multiplier;
+shadowCanvas.width = inputCanvas.width / multiplier;
+const shadowContext = shadowCanvas.getContext('2d');
 const outputCanvas = document.querySelector('#output');
 const outputContext = outputCanvas.getContext('2d');
 inputContext.fillStyle = "rgba(0,0,0,255)";
 
 let drawing = false;
-
 //
 const listener = e => {
-  const x = e.layerX;
-  const y = e.layerY;
+  const shadowX = Math.floor(e.layerX / multiplier);
+  const shadowY = Math.floor(e.layerY / multiplier);
+  const x = shadowX * multiplier;
+  const y = shadowY * multiplier;
   switch (e.type) {
     case 'mousedown':
-      inputContext.fillRect(x, y, 1, 1);
+      inputContext.fillRect(x, y, multiplier, multiplier);
+      shadowContext.fillRect(shadowX, shadowY, 1, 1);
       drawing = true;
       break;
     case 'mousemove':
       if (drawing) {
-        inputContext.fillRect(x, y, 1, 1);
+        inputContext.fillRect(x, y, multiplier, multiplier);
+        shadowContext.fillRect(shadowX, shadowY, 1, 1);
       }
       break;
     case 'mouseup':
@@ -41,16 +48,17 @@ inputCanvas.addEventListener('mouseup', listener, false);
 
 document.querySelector('button').addEventListener('click', () => {
   inputContext.clearRect(0, 0, inputCanvas.width, inputCanvas.height);
+  shadowContext.clearRect(0, 0, shadowCanvas.width, shadowCanvas.height);
 }, false);
 
-const ws = new WebSocket('ws://localhost:15080/websocket');
+const ws = new WebSocket(`ws://${location.host}/websocket`);
 
-let charge = 3.8;
+let charge = 4;
 // let threshold = 85;
 const colorPixel = (x, y, hit) => {
   let alpha = hit / 10;
   outputContext.clearRect(x, y, 10, 10);
-  outputContext.fillStyle = "rgba(0,0,0,"+alpha+")";
+  outputContext.fillStyle = `rgba(0,0,0,${alpha})`;
   outputContext.fillRect(x, y, 10, 10);
 };
 const hits = {};
@@ -60,14 +68,15 @@ ws.onmessage = (message) => {
   const y = m[0] * 10;
   const key = x + '-' + y;
   let hit = hits[key];
-  hits[key] = hits[key] || 0;
-  hit = hits[key] = Math.min(100, ++hits[key]);
-  colorPixel(x, y, hit);
+  hits[key] = hits[key] || {val: 0, time: util.now};
+  hit = hits[key] = {val: Math.min(10, ++hits[key].val), time: util.now};
+  colorPixel(x, y, hit.val);
 };
 let interval = setInterval(() => {
-  const height = inputCanvas.height;
-  const width = inputCanvas.width;
-  const data = inputContext.getImageData(
+  util.now = Date.now();
+  const height = shadowCanvas.height;
+  const width = shadowCanvas.width;
+  const data = shadowContext.getImageData(
     0,
     0,
     width,
@@ -85,27 +94,26 @@ let interval = setInterval(() => {
     }
   }
 
-  // websocket call
   if (inputs.length) {
-    inputs = _.shuffle(inputs);
     ws.send(JSON.stringify(inputs));
   }
-  //console.log('inputs', inputs);
-
 }, 10);
 
 ws.onclose = () => clearInterval(interval);
-
+const util = {now: Date.now() };
 setInterval(() => {
   Object.keys(hits).forEach(key => {
     let hit = hits[key];
-    if (hit > 0) {
-      hit = hits[key] = hits[key] - 1;
+    if (util.now - hit.time > 150) {
+      hit = hits[key] = {val: 0, time: util.now};
       const coords =  key.split('-');
       const x = coords[0];
       const y = coords[1];
-      colorPixel(x, y, hit);
+      colorPixel(x, y, hit.val);
     }
   });
-}, 10);
-// }, false);
+}, 100);
+
+setInterval(() => {
+  console.log(JSON.stringify(hits, '', '  '));
+}, 5000);
