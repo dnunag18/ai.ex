@@ -45,15 +45,15 @@ defmodule AI.Circuit.CenterSurround do
 
   def create do
     # cells
-    {ganglion, _} = Cell.start_link(Cell.StandardAction, %{name: "ganglion", threshold: 1})
-    {bipolar, _} = Cell.start_link(Cell.StandardGraded, %{name: "bipolar"})
+    {:ok, ganglion} = Cell.start(%{name: "ganglion", threshold: 8, module: Cell.StandardAction})
+    {:ok, bipolar} = Cell.start(%{name: "bipolar", module: Cell.StandardGraded})
 
-    {in_to_out, _} = Cell.start_link(Cell.InhibitorGraded, %{name: "in_to_out"})
-    {out_to_in, _} = Cell.start_link(Cell.InhibitorGraded, %{name: "out_to_in"})
+    {:ok, in_to_out} = Cell.start(%{name: "in_to_out", module: Cell.InhibitorGraded})
+    {:ok, out_to_in} = Cell.start(%{name: "out_to_in", module: Cell.InhibitorGraded})
 
     cones = for i <- 0..2 do
       for j <- 0..2 do
-        {cone, _} = Cell.start_link(Cell.StandardGraded, %{name: "cone #{i}-#{j}"})
+        {:ok, cone} = Cell.start(%{name: "cone #{i}-#{j}", module: Cell.StandardGraded})
         cone
       end
     end

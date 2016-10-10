@@ -4,13 +4,13 @@ defmodule AI.Cell.StandardGraded do
   """
   @behaviour AI.Cell
 
-  def relay(charge, pid, name \\ "unknown") do
-    subscribers = GenEvent.call(pid, AI.Cell, :subscribers)
-    num_subscribers = Enum.count(subscribers)
+  def relay(charge, state) do
+    num_subscribers = Enum.count(state.subscribers)
     charge = Float.floor(charge / num_subscribers)
     # IO.puts "#{name} - #{charge}"
+    # IO.puts "#{state.name} - #{charge} to - #{inspect state.subscribers}"
     if charge > 0 do
-      Enum.each(subscribers, &GenEvent.notify(&1, {:stimulate, {charge, :os.timestamp}}))
+      Enum.each(state.subscribers, &GenEvent.notify(&1, {:stimulate, {charge, :os.timestamp}}))
     end
   end
 end

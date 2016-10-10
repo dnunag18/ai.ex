@@ -10,56 +10,60 @@ defmodule AI.Behavior.CenterSurroundTest do
     ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
     {logger, _} = AI.Cell.Debug.Logger.start_link
     GenEvent.call(ganglion, AI.Cell, {:add_subscriber, logger})
-    charge = 5
+    charge = 10
     # test 10 inputs per second for 3 seconds
-    Process.sleep(100)
+    :timer.sleep(100)
     IO.puts "start on-off #{inspect :os.timestamp}"
-    Enum.each(1..60, fn(_) ->
-      Process.sleep(40)
+    Enum.each(1..30, fn(_) ->
+      :timer.sleep(10)
       GenEvent.notify(circuit.inputs |> Enum.at(1) |> Enum.at(1), {:stimulate, {charge, :os.timestamp}})
       # GenEvent.notify(circuit.inputs |> Enum.at(1) |> Enum.at(2), {:stimulate, {charge, :os.timestamp}})
     end)
     IO.puts "finish #{inspect :os.timestamp}"
 
-    Process.sleep(1000)
+    :timer.sleep(1000)
   end
 
-  test "on center, 1 off surround - constant impulses", %{circuit: circuit} do
-    ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
-    {logger, _} = AI.Cell.Debug.Logger.start_link
-    GenEvent.call(ganglion, AI.Cell, {:add_subscriber, logger})
-    charge = 5
-    # test 10 inputs per second for 3 seconds
-    Process.sleep(100)
-    IO.puts "start on-1 off #{inspect :os.timestamp}"
-    Enum.each(1..60, fn(_) ->
-      Process.sleep(40)
-      GenEvent.notify(circuit.inputs |> Enum.at(1) |> Enum.at(1), {:stimulate, {charge, :os.timestamp}})
-      GenEvent.notify(circuit.inputs |> Enum.at(1) |> Enum.at(2), {:stimulate, {charge, :os.timestamp}})
-    end)
-    IO.puts "finish #{inspect :os.timestamp}"
-
-    Process.sleep(1000)
-  end
+  # test "on center, 1 off surround - constant impulses", %{circuit: circuit} do
+  #   ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
+  #   {logger, _} = AI.Cell.Debug.Logger.start_link
+  #   GenEvent.call(ganglion, AI.Cell, {:add_subscriber, logger})
+  #   charge = 2
+  #   # test 10 inputs per second for 3 seconds
+  #   now = :os.timestamp
+  #   :timer.sleep(100)
+  #   then = :os.timestamp
+  #   diff = :timer.now_diff(then, now)
+  #   IO.puts "diff------------------------- #{diff}"
+  #   IO.puts "start on-1 off #{inspect :os.timestamp}"
+  #   Enum.each(1..60, fn(_) ->
+  #     :timer.sleep(50)
+  #     GenEvent.notify(circuit.inputs |> Enum.at(1) |> Enum.at(1), {:stimulate, {charge, :os.timestamp}})
+  #     GenEvent.notify(circuit.inputs |> Enum.at(1) |> Enum.at(2), {:stimulate, {charge, :os.timestamp}})
+  #   end)
+  #   IO.puts "finish #{inspect :os.timestamp}"
+  #
+  #   :timer.sleep(1000)
+  # end
 
 
   test "on center, on surround - constant impulses", %{circuit: circuit} do
     ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
     {logger, _} = AI.Cell.Debug.Logger.start_link
     GenEvent.call(ganglion, AI.Cell, {:add_subscriber, logger})
-    charge = 5
+    charge = 10
     # test 10 inputs per second for 3 seconds
-    Process.sleep(10)
+    :timer.sleep(10)
     IO.puts "start on on #{inspect :os.timestamp}"
     Enum.each(1..30, fn(_) ->
-      Process.sleep(50)
+      :timer.sleep(10)
       Enum.each(circuit.inputs, fn(row) ->
         Enum.each(row, &GenEvent.notify(&1, {:stimulate, {charge, :os.timestamp}}))
       end)
     end)
     IO.puts "finish #{inspect :os.timestamp}"
 
-    Process.sleep(1000)
+    :timer.sleep(1000)
   end
 
   # test "off center, on surround - constant impulses", %{circuit: circuit} do

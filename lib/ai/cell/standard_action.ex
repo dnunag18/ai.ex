@@ -5,9 +5,9 @@ defmodule AI.Cell.StandardAction do
   use GenEvent
   @behaviour AI.Cell
 
-  def relay(charge, pid, name \\ "unknown") do
-    subscribers = GenEvent.call(pid, AI.Cell, :subscribers)
-    threshold = GenEvent.call(pid, AI.Cell, :threshold)
+  def relay(charge, state) do
+    subscribers = state.subscribers
+    threshold = state.threshold
     num_subscribers = Enum.count(subscribers)
     if charge >= threshold do
       charge = Float.floor(charge / num_subscribers)

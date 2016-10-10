@@ -46,21 +46,28 @@ document.querySelector('button').addEventListener('click', () => {
 
 const ws = new WebSocket('ws://localhost:15080/websocket');
 
-let charge = 10;
-const clears = {};
+let charge = 5;
+let threshold = 3;
+const hits = {};
 ws.onmessage = (message) => {
   const m = JSON.parse(message.data);
   const x = m[1] * 10;
   const y = m[0] * 10;
-  outputContext.fillRect(x, y, 10, 10);
   const key = x + '-' + y;
-  let clear = clears[key];
-  if (!clear) {
-    clear = clears[key] = _.debounce(() => {
-      outputContext.clearRect(x, y, 10, 10);
-    }, 2000);
+  let hit = hits[key];
+  if (!hit) {
+    hits[key] = hits[key] || 0;
+    hit = ++hits[key];
+    setTimout(() => {
+      hit = hits[key]--;
+      if (hit < threshold) {
+        outputContext.clearRect(x, y, 10, 10);
+      }
+    }, 100);
   }
-  clear();
+  if (hit > threshold) {
+    outputContext.fillRect(x, y, 10, 10);
+  }
 };
 let interval = setInterval(() => {
   const height = inputCanvas.height;

@@ -7,7 +7,7 @@ defmodule AI.Cell.StandardActionTest do
   end
 
   test "should add a subscriber", %{cell: cell} do
-    subscriber = AI.Cell.StandardAction.start_link
+    subscriber = AI.Cell.StandardAction.start
     subscribers = GenEvent.call(cell, AI.Cell.StandardAction, {:add_subscriber, subscriber})
     assert Enum.count(subscribers) == 1
     assert Enum.at(subscribers, 0) == subscriber
@@ -15,7 +15,7 @@ defmodule AI.Cell.StandardActionTest do
   end
 
   test "should stimulate the subscriber", %{cell: cell} do
-    {source, _} = AI.Cell.StandardGraded.start_link
+    {:ok, source} = AI.Cell.StandardGraded.start
     _ = GenEvent.call(source, AI.Cell.StandardGraded, {:add_subscriber, cell})
     :timer.sleep(1000)
     for _ <- 0..100 do

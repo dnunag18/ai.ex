@@ -5,8 +5,8 @@ defmodule AI.Cell.InhibitorGraded do
   use GenEvent
   @behaviour AI.Cell
 
-  def relay(charge, pid, name \\ "unknown") do
-    subscribers = GenEvent.call(pid, AI.Cell, :subscribers)
+  def relay(charge, state) do
+    subscribers = state.subscribers
     num_subscribers = Enum.count(subscribers)
     # IO.puts "#{name} - #{charge} - #{num_subscribers}"
     if charge > 0 do

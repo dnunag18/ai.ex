@@ -36,7 +36,7 @@ defmodule AI.Cell.Debug.Logger do
       stream = Stream.with_index(GenEvent.stream(pid))
 
       for {el, i} <- stream do
-        IO.puts "#{i} #{inspect :os.timestamp} #{inspect el}"
+        IO.puts "#{i} #{inspect el}"
       end
     end)
     task

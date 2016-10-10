@@ -20,13 +20,16 @@ defmodule WebsocketHandler do
     :ok
   end
 
+  # charges should be an array of x,y,charge
   def websocket_handle({:text, charges}, req, %{retina: retina} = state) do
-    # charges should be an array of x,y,charge
-    charges = :jiffy.decode(charges)
-    now = :os.timestamp
-    Enum.each(charges, fn([x, y, charge]) ->
-      cones = retina.inputs |> Enum.at(y) |> Enum.at(x)
-      Enum.each(cones, &GenEvent.notify(&1, {:stimulate, {charge, now}}))
+    Task.start(fn ->
+      IO.puts "start new stuffff!"
+      charges = :jiffy.decode(charges)
+      now = :os.timestamp
+      Enum.each(charges, fn([x, y, charge]) ->
+        cones = retina.inputs |> Enum.at(y) |> Enum.at(x)
+        Enum.each(cones, &GenEvent.notify(&1, {:stimulate, {charge, now}}))
+      end)
     end)
     {:ok, req, state}
   end
