@@ -3,13 +3,13 @@ defmodule AI.Nucleus.Retina do
 
   defstruct [inputs: [[[]]], outputs: [[]]]
 
-  def create do
+  def create(thresholds) do
     size = 10
     cs_size = 3
 
     cs_matrix = for _ <- 1..size do
       for _ <- 1..size do
-        {:ok, circuit} = CenterSurround.create
+        {:ok, circuit} = CenterSurround.create(thresholds)
         circuit
       end
     end
