@@ -48,7 +48,7 @@ defmodule AI.Cell do
 
   def start(state \\ %{}) do
     state = Map.merge(%__MODULE__{}, state)
-    {:ok, pid} = GenEvent.start
+    {:ok, pid} = GenEvent.start_link
     :ok = GenEvent.add_handler(pid, __MODULE__, state)
     {:ok, pid}
   end
@@ -71,9 +71,9 @@ defmodule AI.Cell do
       diff = :timer.now_diff(now, ts)
       # IO.puts "calc with #{diff}"
       val = cond do
-        diff < 10000 -> t
-        diff < 20000 -> t / 2
-        diff < 30000 -> t / 4
+        diff < 20000 -> t
+        diff < 30000 -> t / 2
+        diff < 40000 -> t / 4
         :true -> 0
       end
       # IO.puts "diff #{diff}"

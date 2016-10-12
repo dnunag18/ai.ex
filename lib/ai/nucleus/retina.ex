@@ -1,18 +1,21 @@
 defmodule AI.Nucleus.Retina do
   alias AI.Circuit.CenterSurround
 
-  defstruct [inputs: [[[]]], outputs: [[]]]
+  defstruct [inputs: [[[]]], outputs: [[]], agent: nil]
 
-  def create(thresholds) do
+  def create(thresholds \\ %{}) do
     size = 10
-    cs_size = 3
 
-    cs_matrix = for _ <- 1..size do
+    {:ok, agent} = Agent.start(fn ->
       for _ <- 1..size do
-        {:ok, circuit} = CenterSurround.create(thresholds)
-        circuit
+        for _ <- 1..size do
+          {:ok, circuit} = CenterSurround.create(thresholds)
+          circuit
+        end
       end
-    end
+    end)
+
+    cs_matrix = Agent.get(agent, fn state -> state end)
 
     inputs = Enum.reduce(cs_matrix, [], fn(row, stacks) ->
       stack(
@@ -37,9 +40,14 @@ defmodule AI.Nucleus.Retina do
       :ok,
       %__MODULE__{
         inputs: inputs,
-        outputs: outputs
+        outputs: outputs,
+        agent: agent
       }
     }
+  end
+
+  def stop(retina) do
+    Process.exit(retina.agent, :shutdown)
   end
 
   def bind(left, right, overlap \\ 0) do
