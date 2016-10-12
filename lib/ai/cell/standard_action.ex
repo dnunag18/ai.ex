@@ -8,7 +8,7 @@ defmodule AI.Cell.StandardAction do
   def relay(charge, state) do
     subscribers = state.subscribers
     threshold = state.threshold
-    num_subscribers = Enum.count(subscribers)
+    num_subscribers = Enum.max([Enum.count(subscribers), 1])
     if charge >= threshold do
       charge = Float.floor(charge / num_subscribers)
       Enum.each(subscribers, &GenEvent.notify(&1, {:stimulate, {charge, :os.timestamp}}))

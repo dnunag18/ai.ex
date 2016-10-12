@@ -3,12 +3,12 @@ defmodule TuneRetina do
 
   def generate_config do
     %{
-      charge: :rand.uniform(30),
-      ganglion: :rand.uniform(50),
+      charge: 7 + (:rand.uniform(50) / 20),
+      ganglion: 12 - :rand.uniform(4),
       cone: :rand.uniform(3) - 1,
-      in_to_out: :rand.uniform(30),
-      out_to_in: :rand.uniform(30),
-      bipolar: :rand.uniform(30)
+      in_to_out: :rand.uniform(3) - 1,
+      out_to_in: 9 - :rand.uniform(10) / 4,
+      bipolar: :rand.uniform(3) - 1
     }
   end
 
@@ -20,7 +20,7 @@ defmodule TuneRetina do
   def run(winners \\ nil, generation \\ 0) do
     IO.puts("starting generation #{generation}")
     if generation < 1000 do
-      winners = gen_population(winners)
+      winners = gen_population(winners, 20)
       |> Enum.map(&test(&1))
       |> Enum.map(&score(&1))
       |> select() # Returns 2 winners of the population
@@ -37,35 +37,50 @@ defmodule TuneRetina do
       row = retina.outputs |> Enum.at(i)
       for j <- 0..(Enum.count(row) - 1) do
         ganglion = row |> Enum.at(j)
-        name = cond do
-          (i == 0 || i == 2) && (j == 0 || j == 2) -> "corner"
-          (i == 1 && j == 1) -> "fill"
-          :true -> "line"
+        name = case {i, j} do
+          {2, 3} -> "corner"
+          {2, 4} -> "line"
+          {2, 5} -> "corner"
+          {3, 3} -> "line"
+          {3, 4} -> "fill"
+          {3, 5} -> "line"
+          {4, 3} -> "corner"
+          {4, 4} -> "line"
+          {4, 5} -> "corner"
+          _ -> nil
         end
-        counter = AI.Cell.Count.start(%{name: name})
-        GenEvent.call(ganglion, AI.Cell, {:add_subscriber, counter})
-        counter
+        if name != nil do
+          counter = AI.Cell.Count.start(%{name: name, dude: "#{i}_#{j}"})
+          GenEvent.call(ganglion, AI.Cell, {:add_subscriber, counter})
+          counter
+        end
       end
-    end |> Enum.reduce([], fn(row, acc) -> acc ++ row end)
+    end |> Enum.map(fn(row) -> Enum.filter(row, fn(el) -> el != nil end) end)
+    |> Enum.reduce([], fn(row, acc) -> acc ++ row end)
     show_a_square(retina, config.charge)
     AI.Nucleus.Retina.stop(retina)
     {config, counters}
   end
 
   def show_a_square(retina, charge) do
-    coords = [{3,2}, {4,2}, {5,2}, {5,3}, {4,3}, {3,3}, {3,4}, {4,4}, {5,4}]
+    coords = [
+      {6,5}, {4,5}, {5,5},
+      {6,3}, {4,3}, {5,3},
+      {6,4}, {4,4}, {5,4}
+    ]
     :timer.sleep(10)
-    Enum.each(1..25, fn(_) ->
+    Enum.each(1..50, fn(_) ->
       :timer.sleep(20)
       now = :os.timestamp
       Enum.each(coords, fn({x, y}) ->
+        # IO.puts("hitting: #{y},#{x}")
         Enum.each(
           retina.inputs |> Enum.at(y) |> Enum.at(x),
           &GenEvent.notify(&1, {:stimulate, {charge, now}})
         )
       end)
     end)
-    :timer.sleep(500)
+    :timer.sleep(1000)
   end
 
   def repro([a, b]) do
@@ -109,11 +124,13 @@ defmodule TuneRetina do
   def calculate_rates(counters) do
     results = counters |> Enum.reduce(%{}, fn(counter, results) ->
       state = GenEvent.call(counter, AI.Cell.Count, :state)
+      # IO.puts("calculating #{inspect state}")
       hits = case state.name do
         "fill" -> Map.get(results, :fill, []) ++ [Map.get(state, :hits, 0)]
         "line" -> Map.get(results, :line, []) ++ [Map.get(state, :hits, 0)]
         "corner" -> Map.get(results, :corner, []) ++ [Map.get(state, :hits, 0)]
       end
+      # IO.puts("hits #{inspect hits}")
       Map.put(results, String.to_atom(state.name), hits)
     end)
     Enum.reduce([:fill, :line, :corner], %{}, fn(field, acc) ->
@@ -129,6 +146,8 @@ defmodule TuneRetina do
       line: line_rate,
       corner: corner_rate
     } = calculate_rates(counters)
+
+    IO.puts("fill_rate, #{fill_rate}, line: #{line_rate}, corner: #{corner_rate}")
 
     points = 0
 

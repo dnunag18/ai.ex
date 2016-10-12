@@ -2,7 +2,8 @@ defmodule AI.Cell.Count do
   use GenEvent
 
   def handle_event({:stimulate, {charge, _}}, state) do
-    Map.put(state, :hits, Map.get(state, :hits, 0) + 1)
+    state = Map.put(state, :hits, Map.get(state, :hits, 0) + 1)
+    # IO.puts("hit! #{inspect state}")
     {:ok, state}
   end
 
