@@ -2,7 +2,7 @@ defmodule AI.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :tune_retina,
+    [app: :ai,
      version: "0.0.0",
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
@@ -16,8 +16,9 @@ defmodule AI.Mixfile do
   def application do
     [
       applications: [:logger, :cowboy, :ranch],
+      mod: {AI, []}
       #mod: {Experiment, []}
-      mod: {TuneRetina, []}
+      #mod: {TuneRetina, []}
     ]
   end
 

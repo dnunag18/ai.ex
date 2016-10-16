@@ -5,11 +5,12 @@ defmodule AI.Circuit.CenterSurround do
 
   defstruct [inputs: [[]], outputs: [[]]]
 
-  def create(thresholds \\ %{ganglion: 1, out_to_in: 9}) do
+  def create(thresholds \\ %{}) do
     # cells
+    # %{bipolar: 0, charge: 9.45, cone: 0, ganglion: 9, in_to_out: 0, out_to_in: 8.25}
     {:ok, ganglion} = Cell.start(%{
       name: "ganglion",
-      threshold: Map.get(thresholds, :ganglion, 1),
+      threshold: Map.get(thresholds, :ganglion, 5),
       module: Cell.StandardAction
     })
     {:ok, bipolar} = Cell.start(%{
@@ -25,7 +26,7 @@ defmodule AI.Circuit.CenterSurround do
     })
     {:ok, out_to_in} = Cell.start(%{
       name: "out_to_in",
-      threshold: Map.get(thresholds, :out_to_in, 9),
+      threshold: Map.get(thresholds, :out_to_in, 0),
       module: Cell.InhibitorGraded
     })
 

@@ -82,7 +82,7 @@ defmodule AI.Behavior.CenterSurroundTest do
   end
 
   def charge do
-    12
+    10
   end
 
   # test "off center, on surround - constant impulses", %{circuit: circuit} do

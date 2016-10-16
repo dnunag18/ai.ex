@@ -1,11 +1,11 @@
 
 
-let charge = 6.7; // charge value from a dot.
+let charge = 50; // charge value from a dot.
 const multiplier = 10; // how much to enlarge input canvas ()
 const ws = new WebSocket(`ws://${location.host}/websocket`);
 const util = {now: Date.now() }; // object to hopefully save time on generating current time
 let max = 1; // max impulses per time frame.  this will be updated at runtime, and it determines the opacity of output points
-const TIME_FRAME = 50; // length of timeframe in ms to calculate ganglion firing rate
+const TIME_FRAME = 100; // length of timeframe in ms to calculate ganglion firing rate
 
 // canvas setup
 const inputCanvas = document.querySelector('#input');
@@ -72,8 +72,8 @@ ws.onmessage = (message) => {
   hit = hits[key] = hits[key].concat([util.now]);
   colorPixel(x, y, hit.length);
 };
-
-// continuously send input info to server
+//
+// // continuously send input info to server
 const interval = setInterval(() => {
   util.now = Date.now();
   const height = shadowCanvas.height;
@@ -99,12 +99,12 @@ const interval = setInterval(() => {
   if (inputs.length) {
     ws.send(JSON.stringify(inputs));
   }
-}, 10);
+}, 20);
 
 // ws cleanup
 ws.onclose = () => clearInterval(interval);
-
-// calculate ganglion firing rate
+//
+// // calculate ganglion firing rate
 setInterval(() => {
   Object.keys(hits).forEach(key => {
     let hit = hits[key];
