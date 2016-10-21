@@ -30,7 +30,7 @@ defmodule AI.Behavior.CenterSurroundTest do
     IO.puts("0-off ganglions: #{length(state.charges)}")
     print_charge(state)
   end
-  #
+
   test "on center, 1 off surround - constant impulses", %{circuit: circuit, counter: counter} do
     ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
     GenEvent.call(ganglion, AI.Cell, {:add_subscriber, counter})

@@ -10,22 +10,28 @@ defmodule AI.Cell do
     module: nil,
     publishers: 0,
     type: :graded, # graded | action
-    timeout: 15,
+    timeout: 20,
     name: "-"
   ]
 
   @callback impulse(subscriber :: term, charge :: number) :: any
 
   def handle_call({:stimulate, charge}, state) do
-    # IO.puts("stimulating #{state.name} with #{charge}")
+    # if state.name == "out_to_in" do
+    #   IO.puts("stimulating #{state.name} with #{charge}")
+    # end
     cell = self
     charges = Map.get(state, :charges)
     if Enum.count(charges) == 0 do
       Task.start(fn ->
+        # IO.puts("#{inspect cell} Task!!!")
         :timer.sleep(state.timeout)
+        # IO.puts("#{inspect cell} after timeout!!!")
         AI.Cell.impulse(cell)
       end)
+      # IO.puts("#{inspect cell} After creation!")
     end
+
     {:ok, nil, Map.put(state, :charges, [charge|charges])}
   end
 
@@ -75,7 +81,9 @@ defmodule AI.Cell do
   end
 
   def stimulate(cell, charge) do
-    GenEvent.call(cell, __MODULE__, {:stimulate, charge})
+    Task.start(fn ->
+      GenEvent.call(cell, __MODULE__, {:stimulate, charge})
+    end)
   end
 
   def impulse(cell) do
