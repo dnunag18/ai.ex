@@ -11,7 +11,9 @@ defmodule AI.CellTest do
       module: AI.Cell.StandardGraded
     })
     {:ok, counter} = AI.Cell.start(%{
-      module: AI.Cell.Count
+      module: AI.Cell.Count,
+      threshold: :infinity,
+      timeout: :infinity
     })
 
     AI.Cell.subscribe(cell, counter)
@@ -23,10 +25,10 @@ defmodule AI.CellTest do
   test "should wait 5ms after stimulus", %{cell: cell, counter: counter} do
     Cell.stimulate(cell, 10)
     state = Cell.get_state(counter)
-    assert Map.get(state, :hits, 0) == 0
+    assert length(Map.get(state, :charges, 0)) == 0
     :timer.sleep(20)
     state = Cell.get_state(counter)
-    assert Map.get(state, :hits, 0) == 1
+    assert length(Map.get(state, :charges, 0)) == 1
   end
 
   test "should wait 5m after 1st stimulus", %{cell: cell, counter: counter} do
@@ -35,10 +37,10 @@ defmodule AI.CellTest do
     Cell.stimulate(cell, 10)
 
     state = Cell.get_state(counter)
-    assert Map.get(state, :hits, 0) == 0
+    assert length(Map.get(state, :charges, 0)) == 0
     :timer.sleep(7)
     state = Cell.get_state(counter)
-    assert Map.get(state, :hits, 0) == 1
+    assert length(Map.get(state, :charges, 0)) == 1
   end
 
   test "should not accumulate after the cutoff time (5)", %{cell: cell, counter: counter} do
@@ -50,7 +52,7 @@ defmodule AI.CellTest do
 
       state = Cell.get_state(counter)
 
-      assert state.hits == 2
-      assert state.total_charge == [6.0, 5.0]
+      assert length(Map.get(state, :charges, 0)) == 2
+      assert state.charges == [6.0, 5.0]
   end
 end

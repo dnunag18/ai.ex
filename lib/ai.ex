@@ -26,7 +26,6 @@ defmodule AI do
       [{:port, 15080}],
       [{ :env, [{:dispatch, dispatch_config}]}]
     )
-    IO.puts "pid: #{inspect pid}"
     {:ok, pid}
   end
 

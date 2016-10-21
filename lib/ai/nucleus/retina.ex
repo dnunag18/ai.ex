@@ -6,6 +6,7 @@ defmodule AI.Nucleus.Retina do
   def create(thresholds \\ %{}) do
     size = 10
 
+    # should probs be a supervisor
     {:ok, agent} = Agent.start(fn ->
       for _ <- 1..size do
         for _ <- 1..size do

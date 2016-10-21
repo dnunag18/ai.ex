@@ -10,15 +10,23 @@ defmodule AI.Cell do
     module: nil,
     publishers: 0,
     type: :graded, # graded | action
-    timeout: 5,
+    timeout: 15,
     name: "-"
   ]
 
-  @callback relay(charge :: number, state :: term) :: any
+  @callback impulse(subscriber :: term, charge :: number) :: any
 
   def handle_call({:stimulate, charge}, state) do
-    state = state.module.stimulate(charge, state)
-    {:ok, nil, state}
+    # IO.puts("stimulating #{state.name} with #{charge}")
+    cell = self
+    charges = Map.get(state, :charges)
+    if Enum.count(charges) == 0 do
+      Task.start(fn ->
+        :timer.sleep(state.timeout)
+        AI.Cell.impulse(cell)
+      end)
+    end
+    {:ok, nil, Map.put(state, :charges, [charge|charges])}
   end
 
   def handle_call(:subscribers, state) do
@@ -31,7 +39,7 @@ defmodule AI.Cell do
     charge = Enum.sum(state.charges)
     charge = Float.floor(charge / num_subscribers)
     if charge > state.threshold do
-      Enum.each(subscribers, &GenEvent.call(&1, __MODULE__, {:stimulate, charge}))
+      Enum.each(subscribers, &state.module.impulse(&1, charge))
     end
     {:ok, nil, Map.put(state, :charges, [])}
   end
@@ -78,45 +86,4 @@ defmodule AI.Cell do
     GenEvent.call(cell, __MODULE__, :state)
   end
 
-  def accumulate_charges(transmitter, state) do
-    # add transmitter to the charges
-    charges = case Enum.count(state.charges) do
-        10 ->
-            [_|t] = state.charges
-            t
-        _ -> state.charges
-    end
-    Map.put(state, :charges, charges ++ [{transmitter, :os.timestamp}])
-  end
-
-  def calculate_charge(charges) do
-    now = :os.timestamp
-    Enum.reduce(charges, 0, fn(el, sum) ->
-      {t, ts} = el
-      diff = :timer.now_diff(now, ts)
-      val = cond do
-        diff < 30000 -> t
-        diff < 60000 -> t / 2
-        diff < 90000 -> t / 4
-        :true -> 0
-      end
-      Enum.max([Enum.min([sum + val, 60]), -60])
-    end)
-  end
-
-  def timer(cell) do
-    state = GenEvent.call(cell, AI.Cell, :state)
-    if state != nil do
-      charge = calculate_charge(Map.get(state, :charges, []))
-
-      # if state.name == "out_to_in" do
-      #   IO.puts "stuff #{state.name} #{charge} -- #{inspect state.charges}"
-      # end
-      state.module.relay(charge * state.multiplier, state)
-      :timer.sleep(20)
-      if Process.alive? cell do
-        timer(cell)
-      end
-    end
-  end
 end
