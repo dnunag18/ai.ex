@@ -3,14 +3,27 @@ defmodule AI.Cell.StandardGraded do
   Graded cell that when it is stimulated with positive charges, it produces positive charges/trasmitters
   """
   @behaviour AI.Cell
+  use GenEvent
+
+  def stimulate(charge, state) do
+    cell = self
+    charges = Map.get(state, :charges)
+    if Enum.count(charges) == 0 do
+      Task.start(fn ->
+        :timer.sleep(state.timeout)
+        AI.Cell.impulse(cell)
+      end)
+    end
+    Map.put(state, :charges, [charge|charges])
+  end
 
   def relay(charge, state) do
-    num_subscribers = Enum.count(state.subscribers)
+    subscribers = state.subscribers
+    num_subscribers = Enum.max([Enum.count(subscribers), 1])
     charge = Float.floor(charge / num_subscribers)
-    # IO.puts "#{name} - #{charge}"
-    # IO.puts "#{state.name} - #{charge} to - #{inspect state.subscribers}"
     if charge > state.threshold do
-      Enum.each(state.subscribers, &GenEvent.notify(&1, {:stimulate, {charge, :os.timestamp}}))
+      Enum.each(subscribers, &GenEvent.notify(&1, {:stimulate, charge}))
     end
+    state
   end
 end

@@ -5,60 +5,52 @@ defmodule AI.CellTest do
 
   alias AI.Cell
 
-  setup do
-    Application.stop(:ai)
-    :ok = Application.start(:ai)
-  end
 
   setup do
-    {:ok, cell} = AI.Cell.StandardGraded.start_link
-    {:ok, cell: cell}
+    {:ok, cell} = AI.Cell.start(%{
+      module: AI.Cell.StandardGraded
+    })
+    {:ok, counter} = AI.Cell.start(%{
+      module: AI.Cell.Count
+    })
+
+    AI.Cell.subscribe(cell, counter)
+    {:ok, cell: cell, counter: counter}
   end
 
-  test "should be able to create an instance" do
-    {:ok, cell} = AI.Cell.StandardGraded.start_link
-    assert cell != nil
+# should not output more than 5 ms
+# if stimulated, should wait 5 ms, or max before  impulse
+  test "should wait 5ms after stimulus", %{cell: cell, counter: counter} do
+    Cell.stimulate(cell, 10)
+    state = Cell.get_state(counter)
+    assert Map.get(state, :hits, 0) == 0
+    :timer.sleep(20)
+    state = Cell.get_state(counter)
+    assert Map.get(state, :hits, 0) == 1
   end
 
-  test "should be able to add subscribers", %{cell: cell} do
-    {:ok, subscribers} = Cell.subscribe(cell, cell)
-    assert Enum.any?(subscribers, fn(s) -> s == cell end)
+  test "should wait 5m after 1st stimulus", %{cell: cell, counter: counter} do
+    Cell.stimulate(cell, 10)
+    :timer.sleep(3)
+    Cell.stimulate(cell, 10)
+
+    state = Cell.get_state(counter)
+    assert Map.get(state, :hits, 0) == 0
+    :timer.sleep(7)
+    state = Cell.get_state(counter)
+    assert Map.get(state, :hits, 0) == 1
   end
 
-  test "should start decaying if no charge", %{cell: cell} do
-    {:ok, task} = Cell.stimulate(cell, 3)
-    assert task != nil
+  test "should not accumulate after the cutoff time (5)", %{cell: cell, counter: counter} do
+      Cell.stimulate(cell, 5)
+      :timer.sleep(7)
+
+      Cell.stimulate(cell, 6)
+      :timer.sleep(7)
+
+      state = Cell.get_state(counter)
+
+      assert state.hits == 2
+      assert state.total_charge == [6.0, 5.0]
   end
-
-  test "should not start a new decay chain if one already exists", %{cell: cell} do
-    {:ok, task1} = Cell.stimulate(cell, 3)
-    assert task1 != nil
-    {:ok, task2} = Cell.stimulate(cell, 3)
-    assert task2 == nil
-  end
-
-  test "charge decays after input", %{cell: cell} do
-    charge = 10
-    {:ok, task} = Cell.stimulate(cell, charge)
-    Task.await(task)
-    assert Cell.get(cell, :charge) < charge
-  end
-
-
-  test "should publish a transmitter that is proportional to the number of subscribers", %{cell: cell} do
-    charge = 10
-    impulse = fn(_, transmitter, _) ->
-      assert transmitter == Float.floor(Float.floor(charge / 2) / 2)
-    end
-    Cell.put(cell, :impulse, impulse)
-
-    for _ <- 0..1 do
-      {:ok, subscriber} = AI.Cell.StandardGraded.start_link
-      subscriber
-    end |> Enum.each(&Cell.subscribe(cell, &1))
-
-    {:ok, task} = Cell.stimulate(cell, charge)
-    Task.await(task)
-  end
-
 end

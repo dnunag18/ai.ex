@@ -9,9 +9,13 @@ defmodule AI.Cell.StandardAction do
     subscribers = state.subscribers
     threshold = state.threshold
     num_subscribers = Enum.max([Enum.count(subscribers), 1])
+    charge = Float.floor(charge / num_subscribers)
+    # IO.puts "ganglion #{charge}"
     if charge >= threshold do
-      charge = Float.floor(charge / num_subscribers)
-      Enum.each(subscribers, &GenEvent.notify(&1, {:stimulate, {charge, :os.timestamp}}))
+      Enum.each(subscribers, &GenEvent.notify(&1, {:stimulate, charge}))
+      # Map.put(state, :charges, [])
+    else
+      state
     end
   end
 end
