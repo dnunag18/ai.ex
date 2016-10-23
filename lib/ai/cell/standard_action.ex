@@ -3,9 +3,17 @@ defmodule AI.Cell.StandardAction do
   Graded cell that when it is stimulated with positive charges, it produces positive charges/trasmitters
   """
 
-  @behaviour AI.Cell
+  use GenEvent
 
-  def impulse(subscriber, charge) do
-    AI.Cell.stimulate(subscriber, charge)
+  def impulse(state) do
+    sum_charge = Enum.sum(state.charges)
+    num_subscribers = Enum.count(state.subscribers)
+    if num_subscribers do
+      charge = Float.floor(sum_charge / num_subscribers)
+      if charge > state.threshold do
+        Enum.each(state.subscribers, &AI.Cell.stimulate(&1, state.action_potential))
+      end
+    end
+    {:ok, nil, Map.put(state, :charges, [])}
   end
 end

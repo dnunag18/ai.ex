@@ -9,45 +9,42 @@ defmodule AI.Cell do
     multiplier: 1,
     module: nil,
     publishers: 0,
+    action_potential: 10,
     type: :graded, # graded | action
     timeout: 20,
     name: "-"
   ]
 
-  @callback impulse(subscriber :: term, charge :: number) :: any
 
   def handle_call({:stimulate, charge}, state) do
-    # if state.name == "out_to_in" do
-    #   IO.puts("stimulating #{state.name} with #{charge}")
-    # end
     cell = self
     charges = Map.get(state, :charges)
     if Enum.count(charges) == 0 do
       Task.start(fn ->
-        # IO.puts("#{inspect cell} Task!!!")
         :timer.sleep(state.timeout)
-        # IO.puts("#{inspect cell} after timeout!!!")
-        AI.Cell.impulse(cell)
+        GenEvent.call(cell, AI.Cell, :impulse)
       end)
-      # IO.puts("#{inspect cell} After creation!")
     end
+    # if state.name == "ganglion" do
+    #   IO.puts "charge #{charge} - pubs: #{state.publishers} #{inspect state.charges}"
+    # end
+    {
+      :ok,
+      nil,
+      Map.put(
+        state,
+        :charges,
+        [charge / Enum.max([state.publishers, 1]) |charges]
+      )
+    }
+  end
 
-    {:ok, nil, Map.put(state, :charges, [charge|charges])}
+  def handle_call(:impulse, state) do
+    state.module.impulse(state)
   end
 
   def handle_call(:subscribers, state) do
     {:ok, state.subscribers, state}
-  end
-
-  def handle_call(:impulse, state) do
-    subscribers = state.subscribers
-    num_subscribers = Enum.max([Enum.count(subscribers), 1])
-    charge = Enum.sum(state.charges)
-    charge = Float.floor(charge / num_subscribers)
-    if charge > state.threshold do
-      Enum.each(subscribers, &state.module.impulse(&1, charge))
-    end
-    {:ok, nil, Map.put(state, :charges, [])}
   end
 
   def handle_call(:state, state) do
@@ -84,10 +81,6 @@ defmodule AI.Cell do
     Task.start(fn ->
       GenEvent.call(cell, __MODULE__, {:stimulate, charge})
     end)
-  end
-
-  def impulse(cell) do
-    GenEvent.call(cell, __MODULE__, :impulse)
   end
 
   def get_state(cell) do
