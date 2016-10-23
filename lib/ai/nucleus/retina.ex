@@ -26,10 +26,10 @@ defmodule AI.Nucleus.Retina do
           bind(
             fields,
             wrap_elems(cs.inputs),
-            1
+            2
           )
         end),
-        1
+        2
       )
     end)
     outputs = Enum.map(cs_matrix, fn(row) ->
