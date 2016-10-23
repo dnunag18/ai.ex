@@ -5,7 +5,7 @@ const multiplier = 10; // how much to enlarge input canvas ()
 const ws = new WebSocket(`ws://${location.host}/websocket`);
 const util = {now: Date.now() }; // object to hopefully save time on generating current time
 let max = 1; // max impulses per time frame.  this will be updated at runtime, and it determines the opacity of output points
-const TIME_FRAME = 100; // length of timeframe in ms to calculate ganglion firing rate
+const TIME_FRAME = 30; // length of timeframe in ms to calculate ganglion firing rate
 const INPUT_INTERVAL = 20;
 
 // canvas setup
@@ -106,16 +106,23 @@ const interval = setInterval(() => {
 ws.onclose = () => clearInterval(interval);
 //
 // // calculate ganglion firing rate
-setInterval(() => {
-  Object.keys(hits).forEach(key => {
-    let hit = hits[key];
-    if (hit.length > max) {
-      max = hit.length;
-    }
-    hit = hits[key] = hit.filter(time => util.now - time < TIME_FRAME + 1);
-    const coords =  key.split('-');
-    const x = coords[0];
-    const y = coords[1];
-    colorPixel(x, y, hit.length);
-  });
-}, TIME_FRAME);
+let timeframeInterval;
+const updateTimeframe = (timeframe) => {
+  max = 1;
+  clearInterval(timeframeInterval);
+  timeframeInterval = setInterval(() => {
+    Object.keys(hits).forEach(key => {
+      let hit = hits[key];
+      if (hit.length > max) {
+        max = hit.length;
+      }
+      hit = hits[key] = hit.filter(time => util.now - time < timeframe + 1);
+      const coords =  key.split('-');
+      const x = coords[0];
+      const y = coords[1];
+      colorPixel(x, y, hit.length);
+    });
+  }, timeframe);
+};
+
+updateTimeframe(TIME_FRAME);

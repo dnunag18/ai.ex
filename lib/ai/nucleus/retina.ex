@@ -11,11 +11,7 @@ defmodule AI.Nucleus.Retina do
     {:ok, agent} = Agent.start(fn ->
       for i <- 1..size do
         for j <- 1..size do
-          {:ok, circuit} = if rem(i * j, 2) == 0 do
-            CenterSurround.create(thresholds)
-          else
-            OffCenterSurround.create(thresholds)
-          end
+          {:ok, circuit} = OffCenterSurround.create(thresholds)
           circuit
         end
       end
