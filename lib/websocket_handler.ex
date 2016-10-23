@@ -9,7 +9,7 @@ defmodule WebsocketHandler do
       row = retina.outputs |> Enum.at(i)
       for j <- 0..(Enum.count(row) - 1) do
         ganglion = row |> Enum.at(j)
-        monitor = AI.Cell.Monitor.start(%{x: i, y: j, monitor: self})
+        {:ok, monitor} = AI.Cell.start(%{x: i, y: j, monitor: self, module: AI.Cell.Monitor})
         GenEvent.call(ganglion, AI.Cell, {:add_subscriber, monitor})
       end
     end
@@ -24,10 +24,9 @@ defmodule WebsocketHandler do
   def websocket_handle({:text, charges}, req, %{retina: retina} = state) do
     Task.start(fn ->
       charges = :jiffy.decode(charges)
-      now = :os.timestamp
       Enum.each(charges, fn([x, y, charge]) ->
         cones = retina.inputs |> Enum.at(y) |> Enum.at(x)
-        Enum.each(cones, &GenEvent.notify(&1, {:stimulate, {charge, now}}))
+        Enum.each(cones, &AI.Cell.stimulate(&1, charge))
       end)
     end)
     {:ok, req, state}

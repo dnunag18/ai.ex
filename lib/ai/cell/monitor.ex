@@ -4,14 +4,8 @@ defmodule AI.Cell.Monitor do
   """
   use GenEvent
 
-  def handle_event({:stimulate, {charge, _}}, state) do
-    send(state.monitor, {state.x, state.y, charge})
-    {:ok, state}
-  end
-
-  def start(state \\ %{x: nil, y: nil, monitor: nil}) do
-    {:ok, pid} = GenEvent.start
-    :ok = GenEvent.add_handler(pid, __MODULE__, state)
-    pid
+  def impulse(state) do
+    send(state.monitor, {state.x, state.y, Enum.sum(state.charges)})
+    {:ok, nil, Map.put(state, :charges, [])}
   end
 end

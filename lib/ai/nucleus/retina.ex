@@ -1,5 +1,6 @@
 defmodule AI.Nucleus.Retina do
   alias AI.Circuit.CenterSurround
+  alias AI.Circuit.OffCenterSurround
 
   defstruct [inputs: [[[]]], outputs: [[]], agent: nil]
 
@@ -8,9 +9,13 @@ defmodule AI.Nucleus.Retina do
 
     # should probs be a supervisor
     {:ok, agent} = Agent.start(fn ->
-      for _ <- 1..size do
-        for _ <- 1..size do
-          {:ok, circuit} = CenterSurround.create(thresholds)
+      for i <- 1..size do
+        for j <- 1..size do
+          {:ok, circuit} = if rem(i * j, 2) == 0 do
+            CenterSurround.create(thresholds)
+          else
+            OffCenterSurround.create(thresholds)
+          end
           circuit
         end
       end
@@ -25,10 +30,10 @@ defmodule AI.Nucleus.Retina do
           bind(
             fields,
             wrap_elems(cs.inputs),
-            2
+            1
           )
         end),
-        2
+        1
       )
     end)
     outputs = Enum.map(cs_matrix, fn(row) ->

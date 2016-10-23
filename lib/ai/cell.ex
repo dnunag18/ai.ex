@@ -25,9 +25,7 @@ defmodule AI.Cell do
         GenEvent.call(cell, AI.Cell, :impulse)
       end)
     end
-    # if state.name == "ganglion" do
-    #   IO.puts "charge #{charge} - pubs: #{state.publishers} #{inspect state.charges}"
-    # end
+
     {
       :ok,
       nil,
@@ -53,13 +51,13 @@ defmodule AI.Cell do
 
   def handle_call({:add_subscriber, subscriber}, state) do
     state = Map.put(state, :subscribers, [subscriber|state.subscribers])
-    GenEvent.call(subscriber, AI.Cell, :publisher)
+    GenEvent.call(subscriber, __MODULE__, :publisher)
     {:ok, state.subscribers, state}
   end
 
   def handle_call(:publisher, state) do
     state = Map.put(state, :publishers, state.publishers + 1)
-    {:ok, state.publishers, state}
+    {:ok, nil, state}
   end
 
   def handle_call(:name, state) do

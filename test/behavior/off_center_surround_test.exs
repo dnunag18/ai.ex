@@ -165,7 +165,7 @@ defmodule AI.Behavior.OffCenterSurroundTest do
   end
 
   def charge do
-    30
+    20
   end
 
   def print_charge(state) do
