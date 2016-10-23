@@ -1,6 +1,5 @@
 defmodule AI.Nucleus.Retina do
   alias AI.Circuit.CenterSurround
-  alias AI.Circuit.OffCenterSurround
 
   defstruct [inputs: [[[]]], outputs: [[]], agent: nil]
 
@@ -11,7 +10,7 @@ defmodule AI.Nucleus.Retina do
     {:ok, agent} = Agent.start(fn ->
       for i <- 1..size do
         for j <- 1..size do
-          {:ok, circuit} = OffCenterSurround.create(thresholds)
+          {:ok, circuit} = CenterSurround.create(thresholds)
           circuit
         end
       end

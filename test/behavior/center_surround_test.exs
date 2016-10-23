@@ -1,10 +1,8 @@
-defmodule AI.Behavior.CenterSurroundTest do
+defmodule AI.Behavior.OffCenterSurroundTest do
   use ExUnit.Case
 
   setup do
-    {:ok, circuit} = AI.Circuit.CenterSurround.create
-
-
+    {:ok, circuit} = AI.Circuit.OffCenterSurround.create
 
     {:ok, counter} = AI.Cell.start(%{
       module: AI.Cell.Count,
@@ -38,7 +36,7 @@ defmodule AI.Behavior.CenterSurroundTest do
     :timer.sleep(100)
     Enum.each(1..50, fn(_) ->
       :timer.sleep(20)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
+      # AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(0), charge)
     end)
 
@@ -55,7 +53,7 @@ defmodule AI.Behavior.CenterSurroundTest do
     :timer.sleep(100)
     Enum.each(1..50, fn(_) ->
       :timer.sleep(20)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
+      # AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(2), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(0), charge)
     end)
@@ -73,7 +71,7 @@ defmodule AI.Behavior.CenterSurroundTest do
     :timer.sleep(100)
     Enum.each(1..50, fn(_) ->
       :timer.sleep(20)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
+      # AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(2), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(0), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(2) |> Enum.at(2), charge)
@@ -92,7 +90,7 @@ defmodule AI.Behavior.CenterSurroundTest do
     :timer.sleep(100)
     Enum.each(1..50, fn(_) ->
       :timer.sleep(20)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
+      # AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(2), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(0), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(2) |> Enum.at(2), charge)
@@ -176,6 +174,5 @@ defmodule AI.Behavior.CenterSurroundTest do
     IO.puts("charge: #{avg_charge}")
     IO.puts("--------------")
   end
-
 
 end

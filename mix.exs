@@ -17,8 +17,6 @@ defmodule AI.Mixfile do
     [
       applications: [:logger, :cowboy, :ranch],
       mod: {AI, []}
-      #mod: {Experiment, []}
-      #mod: {TuneRetina, []}
     ]
   end
 
