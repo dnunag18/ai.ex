@@ -1,5 +1,5 @@
 defmodule AI.CellTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   @moduletag :capture_log
 
@@ -27,7 +27,7 @@ defmodule AI.CellTest do
     state = Cell.get_state(counter)
     cell_state = Cell.get_state(cell)
     assert length(Map.get(state, :charges, 0)) == 0
-    :timer.sleep(cell_state.timeout + 3)
+    :timer.sleep(trunc(cell_state.timeout * 1.5))
     state = Cell.get_state(counter)
     assert length(Map.get(state, :charges, 0)) == 1
   end
@@ -45,7 +45,7 @@ defmodule AI.CellTest do
     assert length(Map.get(state, :charges, 0)) == 1
   end
 
-  test "should not accumulate after the cutoff time (timeout)", %{cell: cell, counter: counter} do
+  test "should not accumulate after the cutoff time (timeout)", %{cell: cell} do
       Cell.stimulate(cell, 5)
       cell_state = Cell.get_state(cell)
       :timer.sleep(trunc(cell_state.timeout / 3))

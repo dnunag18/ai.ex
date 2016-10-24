@@ -1,5 +1,5 @@
 defmodule AI.Nucleus.RetinaTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   @alias AI.Nucleus.Retina
 

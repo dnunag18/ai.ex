@@ -1,5 +1,5 @@
 defmodule AI.Behavior.CenterSurroundTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   setup do
     {:ok, circuit} = AI.Circuit.CenterSurround.create
@@ -25,53 +25,47 @@ defmodule AI.Behavior.CenterSurroundTest do
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    IO.puts("0-off ganglions: #{length(state.charges)}")
-    print_charge(state)
+    assert length(state.charges) <= 5
   end
 
-  test "on center, 1 off surround - constant impulses", %{circuit: circuit, counter: counter} do
+  test "1 off surround", %{circuit: circuit, counter: counter} do
     ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
     GenEvent.call(ganglion, AI.Cell, {:add_subscriber, counter})
     # test 10 inputs per second for 3 seconds
     :timer.sleep(100)
     Enum.each(1..50, fn(_) ->
       :timer.sleep(20)
-      # AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(0), charge)
     end)
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    IO.puts("1-off ganglions: #{length(state.charges)}")
-    print_charge(state)
+    assert length(state.charges) <= 5
   end
 
-  test "on center, 2 off surround - constant impulses", %{circuit: circuit, counter: counter} do
+  test "2 off surround - constant impulses", %{circuit: circuit, counter: counter} do
     ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
     GenEvent.call(ganglion, AI.Cell, {:add_subscriber, counter})
     # test 10 inputs per second for 3 seconds
     :timer.sleep(100)
     Enum.each(1..50, fn(_) ->
       :timer.sleep(20)
-      # AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(2), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(0), charge)
     end)
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    IO.puts("2-off ganglions: #{length(state.charges)}")
-    print_charge(state)
+    assert length(state.charges) > 45
   end
 
-  test "on center, 3 off surround - constant impulses", %{circuit: circuit, counter: counter} do
+  test "3 off surround - constant impulses", %{circuit: circuit, counter: counter} do
     ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
     GenEvent.call(ganglion, AI.Cell, {:add_subscriber, counter})
     # test 10 inputs per second for 3 seconds
     :timer.sleep(100)
     Enum.each(1..50, fn(_) ->
       :timer.sleep(20)
-      # AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(2), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(0), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(2) |> Enum.at(2), charge)
@@ -79,18 +73,16 @@ defmodule AI.Behavior.CenterSurroundTest do
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    IO.puts("3-off ganglions: #{length(state.charges)}")
-    print_charge(state)
+    assert length(state.charges) > 45
   end
 
-  test "on center, 4 off surround - constant impulses", %{circuit: circuit, counter: counter} do
+  test "4 off surround - constant impulses", %{circuit: circuit, counter: counter} do
     ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
     GenEvent.call(ganglion, AI.Cell, {:add_subscriber, counter})
     # test 10 inputs per second for 3 seconds
     :timer.sleep(100)
     Enum.each(1..50, fn(_) ->
       :timer.sleep(20)
-      # AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(2), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(0), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(2) |> Enum.at(2), charge)
@@ -99,11 +91,10 @@ defmodule AI.Behavior.CenterSurroundTest do
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    IO.puts("4-off ganglions: #{length(state.charges)}")
-    print_charge(state)
+    assert length(state.charges) > 45
   end
 
-  test "on center, 5 off surround - constant impulses", %{circuit: circuit, counter: counter} do
+  test "on center, 5 off surround", %{circuit: circuit, counter: counter} do
     ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
     GenEvent.call(ganglion, AI.Cell, {:add_subscriber, counter})
     # test 10 inputs per second for 3 seconds
@@ -120,11 +111,10 @@ defmodule AI.Behavior.CenterSurroundTest do
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    IO.puts("5-off ganglions: #{length(state.charges)}")
-    print_charge(state)
+    assert length(state.charges) < 6
   end
 
-  test "on center, 6 off surround - constant impulses", %{circuit: circuit, counter: counter} do
+  test "on center, 6 off surround", %{circuit: circuit, counter: counter} do
     ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
     GenEvent.call(ganglion, AI.Cell, {:add_subscriber, counter})
     # test 10 inputs per second for 3 seconds
@@ -142,12 +132,11 @@ defmodule AI.Behavior.CenterSurroundTest do
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    IO.puts("6-off ganglions: #{length(state.charges)}")
-    print_charge(state)
+    assert length(state.charges) < 6
   end
 
 
-  test "on center, on surround - constant impulses", %{circuit: circuit, counter: counter} do
+  test "on center, on surround", %{circuit: circuit, counter: counter} do
     ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
     GenEvent.call(ganglion, AI.Cell, {:add_subscriber, counter})
     # test 10 inputs per second for 3 seconds
@@ -160,8 +149,7 @@ defmodule AI.Behavior.CenterSurroundTest do
     end)
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    IO.puts("8-off ganglions: #{length(state.charges)}")
-    print_charge(state)
+    assert length(state.charges) < 6
   end
 
   def charge do
