@@ -1,8 +1,8 @@
-defmodule AI.Behavior.OffCenterSurroundTest do
+defmodule AI.Behavior.CenterSurroundTest do
   use ExUnit.Case
 
   setup do
-    {:ok, circuit} = AI.Circuit.OffCenterSurround.create
+    {:ok, circuit} = AI.Circuit.CenterSurround.create
 
     {:ok, counter} = AI.Cell.start(%{
       module: AI.Cell.Count,

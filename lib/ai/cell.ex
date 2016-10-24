@@ -25,7 +25,6 @@ defmodule AI.Cell do
         GenEvent.call(cell, AI.Cell, :impulse)
       end)
     end
-
     {
       :ok,
       nil,

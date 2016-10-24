@@ -1,4 +1,4 @@
-defmodule AI.Circuit.OffCenterSurround do
+defmodule AI.Circuit.CenterSurround do
   # return an object that can be manipulated by AI.Circuit.
 
   alias AI.Cell
@@ -55,7 +55,7 @@ defmodule AI.Circuit.OffCenterSurround do
 
     {
       :ok,
-      %AI.Circuit.OffCenterSurround{
+      %AI.Circuit.CenterSurround{
         inputs: cones,
         outputs: [[ganglion]]
       }
