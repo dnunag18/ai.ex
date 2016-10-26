@@ -1,9 +1,10 @@
 defmodule AI.Cell.StandardAction do
   @moduledoc """
-  Graded cell that when it is stimulated with positive charges, it produces positive charges/trasmitters
+  This cell relays positive charges when excited by positive charges, but
+  the charges have to reach a certain threshold, and whenever activated, this
+  cell will always send the same charge specified by `:action_potential`.  You
+  may also configure the threshold with `:threshold`
   """
-
-  use GenEvent
 
   def impulse(state) do
     sum_charge = Enum.sum(state.charges)
@@ -11,8 +12,10 @@ defmodule AI.Cell.StandardAction do
     if num_subscribers do
       charge = Float.floor(sum_charge / num_subscribers)
       if charge > state.threshold do
-        charge = charge * state.multiplier
-        Enum.each(state.subscribers, &AI.Cell.stimulate(&1, state.action_potential))
+        Enum.each(
+          state.subscribers,
+          &AI.Cell.stimulate(&1, state.action_potential)
+        )
       end
     end
     {:ok, nil, Map.put(state, :charges, [])}

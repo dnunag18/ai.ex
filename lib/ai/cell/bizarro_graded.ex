@@ -1,8 +1,7 @@
 defmodule AI.Cell.BizarroGraded do
   @moduledoc """
-  Graded cell that when it is stimulated with positive charges, it produces positive charges/trasmitters
+  This cell relays positive charges when it is excited by negative charges
   """
-  use GenEvent
 
   def impulse(state) do
     sum_charge = Enum.sum(state.charges)

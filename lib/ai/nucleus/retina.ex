@@ -1,4 +1,7 @@
 defmodule AI.Nucleus.Retina do
+  @moduledoc """
+  Creates retina nucleus
+  """
   alias AI.Circuit.CenterSurround
 
   defstruct [inputs: [[[]]], outputs: [[]], agent: nil]
@@ -8,8 +11,8 @@ defmodule AI.Nucleus.Retina do
 
     # should probs be a supervisor
     {:ok, agent} = Agent.start(fn ->
-      for i <- 1..size do
-        for j <- 1..size do
+      for _ <- 1..size do
+        for _ <- 1..size do
           {:ok, circuit} = CenterSurround.create(thresholds)
           circuit
         end
@@ -59,22 +62,27 @@ defmodule AI.Nucleus.Retina do
       left_width = Enum.count(Enum.at(left, 0))
       right_width = Enum.count(Enum.at(right, 0))
       stitch_width = left_width + right_width
-      Enum.map(0..(height - 1), fn(i)->
-        Enum.reduce(0..(stitch_width - 1), [], fn(j, acc) ->
-          matrix = case j >= left_width do
-            :true -> right
-            :false -> left
-          end
+      Enum.map(0..(height - 1), fn(i) ->
+        0..(stitch_width - 1)
+        |> Enum.reduce([], fn(j, acc) ->
+            matrix = case j >= left_width do
+              :true -> right
+              :false -> left
+            end
 
-          el = matrix |> Enum.at(i) |> Enum.at(rem(j, left_width))
+            el = matrix |> Enum.at(i) |> Enum.at(rem(j, left_width))
 
-          if left_width <= j && j - left_width < overlap do
-            [prev|tail] = Enum.take(acc, overlap - j - 1)
-            Enum.take(acc, left_width - j + overlap - 1) ++ [prev ++ el | tail]
-          else
-            [el|acc]
-          end
-        end) |> Enum.reverse()
+            if left_width <= j && j - left_width < overlap do
+              [prev | tail] = Enum.take(acc, overlap - j - 1)
+              Enum.take(
+                acc,
+                left_width - j + overlap - 1
+              ) ++ [prev ++ el | tail]
+            else
+              [el | acc]
+            end
+          end)
+        |> Enum.reverse()
       end)
     end
   end
@@ -87,30 +95,35 @@ defmodule AI.Nucleus.Retina do
       width = Enum.count(Enum.at(top, 0))
       bottom_height = Enum.count(bottom)
       stitch_height = top_height + bottom_height
-      Enum.reduce(0..(stitch_height - 1), [], fn(i, acc) ->
-        matrix = case i >= top_height do
-          :true -> bottom
-          :false -> top
-        end
 
-        row = matrix |> Enum.at(rem(i, top_height))
+      0..(stitch_height - 1)
+      |> Enum.reduce([], fn(i, acc) ->
+          matrix = case i >= top_height do
+            :true -> bottom
+            :false -> top
+          end
 
-        if top_height <= i && i - top_height < overlap do
-          [prev|tail] = Enum.take(acc, overlap - i - 1)
-          Enum.take(acc, top_height - i + overlap - 1) ++ [
-            Enum.map(
-              Enum.zip(
-                prev,
-                row
-              ),
-              &Tuple.to_list(&1)
-            ) |> Enum.map(fn([x, y]) -> x ++ y end)
-            |tail
-          ]
-        else
-          [row|acc]
-        end
-      end) |> Enum.reverse()
+          row = matrix |> Enum.at(rem(i, top_height))
+
+          if top_height <= i && i - top_height < overlap do
+            [prev | tail] = Enum.take(acc, overlap - i - 1)
+            Enum.take(acc, top_height - i + overlap - 1) ++ [
+              []
+              |> Enum.map(
+                  Enum.zip(
+                    prev,
+                    row
+                  ),
+                  &Tuple.to_list(&1)
+                )
+              |> Enum.map(fn([x, y]) -> x ++ y end)
+              | tail
+            ]
+          else
+            [row | acc]
+          end
+        end)
+      |> Enum.reverse()
     end
   end
 

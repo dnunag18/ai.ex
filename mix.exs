@@ -16,7 +16,7 @@ defmodule AI.Mixfile do
   def application do
     [
       applications: [:logger, :cowboy, :ranch],
-      mod: {AI, []}
+      mod: {AI, []},
     ]
   end
 
@@ -32,8 +32,9 @@ defmodule AI.Mixfile do
   defp deps do
     [
       { :cowboy, github: "ninenines/cowboy", tag: "2.0.0-pre.3" },
-      {:ex_doc, "~> 0.12", only: :dev},
-      {:jiffy, "~> 0.14.7"}
+      {:ex_doc, "~> 0.14.3", only: :dev},
+      {:jiffy, "~> 0.14.7"},
+      {:dogma, "~> 0.1", only: :dev},
     ]
   end
 end
