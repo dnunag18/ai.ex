@@ -10,6 +10,7 @@ defmodule AI.Cell.StandardGraded do
     if num_subscribers > 0 do
       charge = Float.floor(sum_charge / num_subscribers)
       if charge > state.threshold do
+        charge = charge * state.multiplier
         Enum.each(state.subscribers, &AI.Cell.stimulate(&1, charge))
       end
     end

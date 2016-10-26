@@ -11,6 +11,7 @@ defmodule AI.Cell.StandardAction do
     if num_subscribers do
       charge = Float.floor(sum_charge / num_subscribers)
       if charge > state.threshold do
+        charge = charge * state.multiplier
         Enum.each(state.subscribers, &AI.Cell.stimulate(&1, state.action_potential))
       end
     end

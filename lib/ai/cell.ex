@@ -31,7 +31,7 @@ defmodule AI.Cell do
       Map.put(
         state,
         :charges,
-        [charge / Enum.max([state.publishers, 1]) |charges]
+        [charge / Enum.max([state.publishers, 1]) | charges]
       )
     }
   end

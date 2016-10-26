@@ -1,8 +1,8 @@
-defmodule AI.Behavior.CenterSurroundTest do
+defmodule AI.Behavior.OffCenterSurroundTest do
   use ExUnit.Case, async: true
 
   setup do
-    {:ok, circuit} = AI.Circuit.CenterSurround.create
+    {:ok, circuit} = AI.Circuit.OffCenterSurround.create
 
     {:ok, counter} = AI.Cell.start(%{
       module: AI.Cell.Count,
@@ -25,8 +25,7 @@ defmodule AI.Behavior.CenterSurroundTest do
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    assert length(state.charges) > 45
-    print_charge(state, "0 Off")
+    assert length(state.charges) <= 5
   end
 
   test "1 off surround", %{circuit: circuit, counter: counter} do
@@ -37,13 +36,11 @@ defmodule AI.Behavior.CenterSurroundTest do
     Enum.each(1..50, fn(_) ->
       :timer.sleep(20)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(0), charge)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
     end)
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    assert length(state.charges) > 45
-    print_charge(state, "1 off")
+    assert length(state.charges) <= 5
   end
 
   test "2 off surround - constant impulses", %{circuit: circuit, counter: counter} do
@@ -55,13 +52,11 @@ defmodule AI.Behavior.CenterSurroundTest do
       :timer.sleep(20)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(2), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(0), charge)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
     end)
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
     assert length(state.charges) > 45
-    print_charge(state, "2 off")
   end
 
   test "3 off surround - constant impulses", %{circuit: circuit, counter: counter} do
@@ -74,13 +69,11 @@ defmodule AI.Behavior.CenterSurroundTest do
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(2), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(0), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(2) |> Enum.at(2), charge)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
     end)
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    assert length(state.charges) > 20
-    print_charge(state, "3 off")
+    assert length(state.charges) > 45
   end
 
   test "4 off surround - constant impulses", %{circuit: circuit, counter: counter} do
@@ -94,13 +87,11 @@ defmodule AI.Behavior.CenterSurroundTest do
       AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(0), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(2) |> Enum.at(2), charge)
       AI.Cell.stimulate(circuit.inputs |> Enum.at(2) |> Enum.at(0), charge)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
     end)
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    assert length(state.charges) < 30
-    print_charge(state, "4 off")
+    assert length(state.charges) > 45
   end
 
   test "on center, 5 off surround", %{circuit: circuit, counter: counter} do
@@ -120,8 +111,7 @@ defmodule AI.Behavior.CenterSurroundTest do
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    assert length(state.charges) < 10
-    print_charge(state, "5 off")
+    assert length(state.charges) < 6
   end
 
   test "on center, 6 off surround", %{circuit: circuit, counter: counter} do
@@ -142,14 +132,13 @@ defmodule AI.Behavior.CenterSurroundTest do
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    assert length(state.charges) < 10
-    print_charge(state, "6 off")
+    assert length(state.charges) < 6
   end
 
 
   test "on center, on surround", %{circuit: circuit, counter: counter} do
     ganglion = circuit.outputs |> Enum.at(0) |> Enum.at(0)
-    AI.Cell.subscribe(ganglion, counter)
+    GenEvent.call(ganglion, AI.Cell, {:add_subscriber, counter})
     # test 10 inputs per second for 3 seconds
     :timer.sleep(10)
     Enum.each(1..50, fn(_) ->
@@ -161,16 +150,16 @@ defmodule AI.Behavior.CenterSurroundTest do
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
     assert length(state.charges) < 6
-    print_charge(state, "8 off")
   end
 
   def charge do
     20
   end
 
-  def print_charge(state, name) do
+  def print_charge(state) do
     charges = Map.get(state, :charges, [])
-    IO.puts("#{name}: #{Enum.count(charges)}")
+    avg_charge = Enum.sum(charges) / Enum.max([1, Enum.count(charges)])
+    IO.puts("charge: #{Enum.count(charges)}")
     IO.puts("--------------")
   end
 

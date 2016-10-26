@@ -11,6 +11,7 @@ defmodule AI.Cell.InhibitorGraded do
     if num_subscribers do
       charge = Float.floor(sum_charge / num_subscribers)
       if charge > state.threshold do
+        charge = charge * state.multiplier
         Enum.each(state.subscribers, &AI.Cell.stimulate(&1, -charge))
       end
     end
