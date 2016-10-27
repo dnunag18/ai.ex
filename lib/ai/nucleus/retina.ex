@@ -108,15 +108,13 @@ defmodule AI.Nucleus.Retina do
           if top_height <= i && i - top_height < overlap do
             [prev | tail] = Enum.take(acc, overlap - i - 1)
             Enum.take(acc, top_height - i + overlap - 1) ++ [
-              []
-              |> Enum.map(
-                  Enum.zip(
-                    prev,
-                    row
-                  ),
-                  &Tuple.to_list(&1)
-                )
-              |> Enum.map(fn([x, y]) -> x ++ y end)
+              Enum.map(
+                Enum.zip(
+                  prev,
+                  row
+                ),
+                &Tuple.to_list(&1)
+              ) |> Enum.map(fn([x, y]) -> x ++ y end)
               | tail
             ]
           else

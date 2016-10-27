@@ -56,7 +56,7 @@ defmodule AI.Behavior.OffCenterSurroundTest do
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    assert length(state.charges) > 45
+    assert length(state.charges) > 40
   end
 
   test "3 off surround - constant impulses", %{circuit: circuit, counter: counter} do
@@ -73,7 +73,7 @@ defmodule AI.Behavior.OffCenterSurroundTest do
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    assert length(state.charges) > 45
+    assert length(state.charges) > 40
   end
 
   test "4 off surround - constant impulses", %{circuit: circuit, counter: counter} do
@@ -158,7 +158,6 @@ defmodule AI.Behavior.OffCenterSurroundTest do
 
   def print_charge(state) do
     charges = Map.get(state, :charges, [])
-    avg_charge = Enum.sum(charges) / Enum.max([1, Enum.count(charges)])
     IO.puts("charge: #{Enum.count(charges)}")
     IO.puts("--------------")
   end

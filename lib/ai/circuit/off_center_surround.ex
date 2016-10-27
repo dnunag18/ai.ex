@@ -22,7 +22,6 @@ defmodule AI.Circuit.OffCenterSurround do
     {:ok, out_to_in} = Cell.start(%{
       name: "out_to_in",
       threshold: Map.get(thresholds, :out_to_in, 0),
-      multiplier: 0.5,
       module: Cell.InhibitorGraded
     })
 
