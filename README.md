@@ -10,7 +10,8 @@ Attempt to simulate neural activity for vision.
 * Creating a project: http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html
 
 ### Install and learn git
-* https://git-scm.com/
+* Install: https://git-scm.com/
+* Getting started with git: (create a github account and fork first) https://www.youtube.com/watch?v=TPB655UPkh8
 * Interactive getting started guide: https://try.github.io/
 * Compreshensive git tutorial: https://git-scm.com
 
