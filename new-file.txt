@@ -1,7 +1,5 @@
-hey hey hey
-erg:w
-e
-ewr
-erwt
-sdfg
-
+defmodule ModuleName do
+  def hello do
+    IO.puts "Hello World"
+  end
+end
