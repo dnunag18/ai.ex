@@ -1,8 +1,8 @@
-defmodule AI.Circuit.Simple45Test do
+defmodule AI.Circuit.Simple135Test do
   use ExUnit.Case, async: true
 
   setup do
-    {:ok, circuit} = AI.Circuit.Simple45.create(20 * 2.5) # needs 4 total ons
+    {:ok, circuit} = AI.Circuit.Simple135.create(20 * 2.5) # needs 4 total ons
     {:ok, counter} = AI.Cell.start(%{
       module: AI.Cell.Count,
       threshold: :infinity,
@@ -18,7 +18,7 @@ defmodule AI.Circuit.Simple45Test do
     :timer.sleep(100)
     Enum.each(1..10, fn(_) ->
       :timer.sleep(20)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
+      AI.Cell.stimulate(circuit.inputs |> Enum.at(0) |> Enum.at(3), charge)
     end)
 
     :timer.sleep(210)
@@ -34,8 +34,8 @@ defmodule AI.Circuit.Simple45Test do
     :timer.sleep(100)
     Enum.each(1..10, fn(_) ->
       :timer.sleep(20)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(0) |> Enum.at(0), charge)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
+      AI.Cell.stimulate(circuit.inputs |> Enum.at(0) |> Enum.at(3), charge)
+      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(2), charge)
     end)
 
     :timer.sleep(210)
@@ -51,9 +51,9 @@ defmodule AI.Circuit.Simple45Test do
     :timer.sleep(100)
     Enum.each(1..10, fn(_) ->
       :timer.sleep(20)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(0) |> Enum.at(0), charge)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(2) |> Enum.at(2), charge)
+      AI.Cell.stimulate(circuit.inputs |> Enum.at(0) |> Enum.at(3), charge)
+      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(2), charge)
+      AI.Cell.stimulate(circuit.inputs |> Enum.at(2) |> Enum.at(1), charge)
     end)
 
     :timer.sleep(210)
@@ -69,10 +69,10 @@ defmodule AI.Circuit.Simple45Test do
     :timer.sleep(100)
     Enum.each(1..10, fn(_) ->
       :timer.sleep(20)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(0) |> Enum.at(0), charge)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(1), charge)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(2) |> Enum.at(2), charge)
-      AI.Cell.stimulate(circuit.inputs |> Enum.at(3) |> Enum.at(3), charge)
+      AI.Cell.stimulate(circuit.inputs |> Enum.at(0) |> Enum.at(3), charge)
+      AI.Cell.stimulate(circuit.inputs |> Enum.at(1) |> Enum.at(2), charge)
+      AI.Cell.stimulate(circuit.inputs |> Enum.at(2) |> Enum.at(1), charge)
+      AI.Cell.stimulate(circuit.inputs |> Enum.at(3) |> Enum.at(0), charge)
     end)
 
     :timer.sleep(210)

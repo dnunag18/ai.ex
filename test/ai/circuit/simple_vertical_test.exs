@@ -59,7 +59,7 @@ defmodule AI.Circuit.SimpleVerticalTest do
       AI.Cell.stimulate(circuit.inputs |> Enum.at(3) |> Enum.at(0), charge)
     end)
 
-    :timer.sleep(2010)
+    :timer.sleep(210)
     state = AI.Cell.get_state(counter)
     print_charge(state, "4 of 6")
     assert length(state.charges) == 10
@@ -79,7 +79,7 @@ defmodule AI.Circuit.SimpleVerticalTest do
       AI.Cell.stimulate(circuit.inputs |> Enum.at(4) |> Enum.at(0), charge)
     end)
 
-    :timer.sleep(2010)
+    :timer.sleep(210)
     state = AI.Cell.get_state(counter)
     assert length(state.charges) >= 9
     print_charge(state, "5 of 6")
@@ -100,7 +100,7 @@ defmodule AI.Circuit.SimpleVerticalTest do
       AI.Cell.stimulate(circuit.inputs |> Enum.at(5) |> Enum.at(0), charge)
     end)
 
-    :timer.sleep(2010)
+    :timer.sleep(210)
     state = AI.Cell.get_state(counter)
     print_charge(state, "6 of 6")
     assert length(state.charges) >= 9
