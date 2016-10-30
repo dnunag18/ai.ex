@@ -1,7 +1,7 @@
-defmodule AI.Nucleus.RetinaTest do
+defmodule AI.NucleusTest do
   use ExUnit.Case, async: true
 
-  @alias AI.Nucleus.Retina
+  alias AI.Nucleus
 
   test "binding (left -> right)" do
     a = [
@@ -13,7 +13,7 @@ defmodule AI.Nucleus.RetinaTest do
       [["a"], ["b"], ["c"]]
     ]
 
-    assert AI.Nucleus.Retina.bind(a, b, 1) == [
+    assert Nucleus.bind(a, b, 1) == [
       [[1], [2], [3, "a"], ["b"], ["c"]],
       [[1], [2], [3, 6, "a"], ["b"], ["c"]]
     ]
@@ -29,7 +29,7 @@ defmodule AI.Nucleus.RetinaTest do
       [["a"], ["b"], ["c"]]
     ]
 
-    assert AI.Nucleus.Retina.bind(a, b, 2) == [
+    assert Nucleus.bind(a, b, 2) == [
       [[1], [2, "a"], [3, "b"], ["c"]],
       [[1], [2, "a"], [3, 6, "b"], ["c"]]
     ]
@@ -45,7 +45,7 @@ defmodule AI.Nucleus.RetinaTest do
       [[3], [2], [1]]
     ]
 
-    assert AI.Nucleus.Retina.stack(a, b, 1) == [
+    assert Nucleus.stack(a, b, 1) == [
       [[1], [2], [3]],
       [[1, 3], [2, 2], [3, 1]],
       [[3], [2], [1]]
@@ -59,7 +59,7 @@ defmodule AI.Nucleus.RetinaTest do
       [[3], [2], [1]]
     ]
 
-    assert AI.Nucleus.Retina.stack(a, b, 1) == b
+    assert Nucleus.stack(a, b, 1) == b
   end
 
   test "complex stacking no top ([] -> bottom)" do
@@ -75,7 +75,7 @@ defmodule AI.Nucleus.RetinaTest do
       [[3], [2], [1]],
       [[3], [2], [1]]
     ]
-    assert AI.Nucleus.Retina.stack(a, b, 1) == [
+    assert Nucleus.stack(a, b, 1) == [
       [[1], [2], [3]],
       [[1, 3], [2, 2], [3, 1]],
       [[1], [2], [3]],
@@ -95,7 +95,7 @@ defmodule AI.Nucleus.RetinaTest do
       [[3], [2], [1]],
       [[13], [12], [11]]
     ]
-    assert AI.Nucleus.Retina.stack(a, b, 2) == [
+    assert Nucleus.stack(a, b, 2) == [
       [[30, 3], [20, 2], [10, 1]],
       [[300, 13], [200, 12], [100, 11]]
     ]
@@ -110,7 +110,7 @@ defmodule AI.Nucleus.RetinaTest do
       [[3], [2], [1]],
       [[3], [2], [1]]
     ]
-    assert AI.Nucleus.Retina.bind(a, b, 1) == [
+    assert Nucleus.bind(a, b, 1) == [
       [[1], [2], [3, 3], [2], [1, 3], [2], [1] ],
       [[1], [2], [3, 6, 3], [2], [1, 3], [2], [1] ]
     ]
