@@ -1,8 +1,8 @@
-defmodule AI.Circuit.SimpleHorizontalTest do
+defmodule AI.Circuit.SimpleVerticalTest do
   use ExUnit.Case, async: true
 
   setup do
-    {:ok, circuit} = AI.Circuit.SimpleHorizontal.create(20 * 4 - 5) # needs 4 total ons
+    {:ok, circuit} = AI.Circuit.SimpleVertical.create(20 * 4 - 5) # needs 4 total ons
     {:ok, counter} = AI.Cell.start(%{
       module: AI.Cell.Count,
       threshold: :infinity,
@@ -24,7 +24,7 @@ defmodule AI.Circuit.SimpleHorizontalTest do
 
     :timer.sleep(210)
     state = AI.Cell.get_state(counter)
-    assert length(state.charges) < 2
+    assert length(state.charges) < 1
     print_charge(state, "2 of 6")
   end
 

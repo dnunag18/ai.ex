@@ -42,7 +42,7 @@ defmodule AI.Behavior.CenterSurroundTest do
 
     :timer.sleep(1100)
     state = AI.Cell.get_state(counter)
-    assert length(state.charges) > 45
+    assert length(state.charges) > 43
     print_charge(state, "1 off")
   end
 
